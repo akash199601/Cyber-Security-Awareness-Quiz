@@ -100,14 +100,36 @@ def submit_quiz(request):
         wrong_answers = total_questions - correct_answers
         score_percentage = (score / total_questions) * 100 if total_questions > 0 else 0
 
-        QuizResult.objects.create(
-            candidate_id=candidate.id,
-            score=score,
-            total_questions=total_questions,
-            wrong_answers=wrong_answers,
-            employee_id=candidate.employee_id,
-            details=details  # Store details as JSON or text
-        )
+        # QuizResult.objects.create(
+        #     candidate_id=candidate.id,
+        #     score=score,
+        #     total_questions=total_questions,
+        #     wrong_answers=wrong_answers,
+        #     employee_id=candidate.employee_id,
+        #     details=details  # Store details as JSON or text
+        # )
+        
+         # Check if a result already exists for this candidate
+        try:
+            quiz_result = QuizResult.objects.get(candidate_id=candidate.id)
+            quiz_result.score = score
+            quiz_result.total_questions = total_questions
+            quiz_result.wrong_answers = wrong_answers
+            quiz_result.details = details  # Store details as JSON or text
+            quiz_result.retest += 1  # Increment retest counter
+            quiz_result.save()
+        except QuizResult.DoesNotExist:
+            # If result doesn't exist, create a new one
+            QuizResult.objects.create(
+                candidate_id=candidate.id,
+                score=score,
+                total_questions=total_questions,
+                wrong_answers=wrong_answers,
+                employee_id=candidate.employee_id,
+                details=details,  # Store details as JSON or text
+                retest=1  # Start retest count at 1 for the first attempt
+            )
+        request.session.flush()
         # Pass all the details (including all options for each question) to the template
         return render(request, 'quiz_result.html', {
             'score': score,

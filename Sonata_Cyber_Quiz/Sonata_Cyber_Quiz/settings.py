@@ -83,13 +83,27 @@ WSGI_APPLICATION = 'Sonata_Cyber_Quiz.wsgi.application'
 # }
 
 
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "mssql",
+#         "NAME": "CyberSecurity_Test",
+#         "USER": "sa",
+#         "PASSWORD": "sonata@123",
+#         "HOST": "HODT153",
+#         "PORT": "1433",
+#         "OPTIONS": {
+#             "driver": "ODBC Driver 17 for SQL Server",
+#         },
+#     },
+# }
+
 DATABASES = {
     "default": {
         "ENGINE": "mssql",
-        "NAME": "CyberSecurity_Test",
-        "USER": "sa",
-        "PASSWORD": "sonata@123",
-        "HOST": "HODT153",
+        "NAME": "Sonata_Cyber_Quiz",
+        "USER": "SFPL_Connect",
+        "PASSWORD": "$%n5bF33%X",
+        "HOST": "172.17.130.216",
         "PORT": "1433",
         "OPTIONS": {
             "driver": "ODBC Driver 17 for SQL Server",

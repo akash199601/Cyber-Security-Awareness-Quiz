@@ -31,7 +31,7 @@ class QuizResult(models.Model):
     date_taken = models.DateTimeField(auto_now_add=True)
     employee_id = models.CharField(max_length=50,null=True)  # Add this field
     details = models.TextField()
-    
+    retest = models.IntegerField()
     def __str__(self):
         return '__all__'
 
