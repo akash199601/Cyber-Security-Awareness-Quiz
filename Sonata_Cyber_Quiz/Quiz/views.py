@@ -143,7 +143,3 @@ def submit_quiz(request):
         })
 
     return redirect('home')
-
-
-
-# C:\Users\Sonata\AppData\Local\Programs\Python\Python311\python.exe|C:\Users\Sonata\AppData\Local\Programs\Python\Python311\Lib\site-packages\wfastcgi.py
