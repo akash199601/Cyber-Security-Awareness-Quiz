@@ -4,7 +4,7 @@ from django.contrib.postgres.fields import JSONField
 
 class Candidate(models.Model):
     name = models.CharField(max_length=100)
-    employee_id = models.CharField(max_length=50)
+    employee_id = models.IntegerField()
 
     def __str__(self):
         return '__all__'

@@ -73,7 +73,7 @@ li{
 }
 </style>
     <div class="hero-section">
-        <h1>Welcome to the Cyber Security Awareness Quiz</h1>
+        <h1>Welcome to the Sonata Cyber Security Awareness Quiz</h1>
         <p>Test your knowledge and improve your cyber security skills with our comprehensive quiz.</p>
         {% comment %} <button type="button" class="btn btn-primary px-4 py-2 fw-bold"><a href="{% url 'candidate_details' %}" class="btn-start">Start Quiz</a></button> {% endcomment %}
         <button type="button" class="btn btn-primary px-4 py-2 fw-bold" id="openModalBtn">Start Quiz</button>
@@ -129,45 +129,61 @@ li{
     </div>
 </div> {% endcomment %}
 
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        document.getElementById("userForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            console.log("Form submission initiated.");
 
+            const emp_id = document.getElementById("emp_id").value.trim();
+            const Pattern = /^[0-9]+$/;
+
+            if (!Pattern.test(emp_id)) {
+                alert(" should only contain positive numbers.");
+                return;
+            }
+            event.target.submit();
+        });
+    });
+</script>
 <script>
 // Get the modal
 var modal = document.getElementById("myModal");
-var statusModal = document.getElementById("statusModal");
+//var statusModal = document.getElementById("statusModal");
 // Get the button that opens the modal
 var btn = document.getElementById("openModalBtn");
-var statusBtn = document.getElementById("openStatusModalBtn");
+//var statusBtn = document.getElementById("openStatusModalBtn");
 // Get the <span> element that closes the modal
 var span = document.getElementsByClassName("close")[0];
-var spanCloseStatusModal = document.getElementsByClassName("close")[1];
+//var spanCloseStatusModal = document.getElementsByClassName("close")[1];
 // When the user clicks the button, open the modal
 btn.onclick = function() {
     modal.style.display = "block";
 }
 
 
-// Open the Check Status modal
+/* Open the Check Status modal
 statusBtn.onclick = function() {
     statusModal.style.display = "block";
-}
+}*/
 
 // When the user clicks on <span> (x), close the modal
 span.onclick = function() {
     modal.style.display = "none";
 }
 
-spanCloseStatusModal.onclick = function() {
+/*spanCloseStatusModal.onclick = function() {
     statusModal.style.display = "none";
-}
+}*/
 
 // When the user clicks anywhere outside of the modal, close it
 window.onclick = function(event) {
     if (event.target == modal) {
         modal.style.display = "none";
     }
-    if (event.target == statusModal) {
+    /*if (event.target == statusModal) {
         statusModal.style.display = "none";
-    }
+    }*/
 }
 
 </script>    

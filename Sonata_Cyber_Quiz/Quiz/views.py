@@ -1,6 +1,7 @@
 import json
-from django.shortcuts import render, redirect
-from .forms import CandidateForm, QuizForm
+from pyexpat.errors import messages
+from django.shortcuts import get_object_or_404, render, redirect
+from .forms import CandidateForm, CheckStatusForm, QuizForm
 from .models import Option, Question, Candidate, QuizResult
 
 def home(request):
