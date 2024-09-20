@@ -156,7 +156,7 @@ def submit_quiz(request):
             'score_percentage': score_percentage,
             'details': details,
             'quiz_result' : quiz_result,
-            
+            'is_retest' : is_retest
             
         })
 
