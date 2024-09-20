@@ -3,9 +3,8 @@ from django import forms
 
 
 class CandidateForm(forms.Form):
-    employee_id = forms.CharField(label="Employee ID", max_length=5, required=True,  widget=forms.TextInput(attrs={'class': 'form-control','id':'emp_id'}))
-    name = forms.CharField(label="Name", max_length=100, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
-    
+    employee_id = forms.CharField(label="Employee ID", max_length=6, required=True,  widget=forms.TextInput(attrs={'class': 'form-control','id':'emp_id'}))
+    name = forms.CharField(label="Name", max_length=20, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
 class QuizForm(forms.Form):
     def __init__(self, *args, **kwargs):
         questions = kwargs.pop('questions', None)
@@ -20,6 +19,7 @@ class QuizForm(forms.Form):
                     widget=forms.RadioSelect,
                     label=question.question_text
                 )
+                
                 
 
 class CheckStatusForm(forms.Form):

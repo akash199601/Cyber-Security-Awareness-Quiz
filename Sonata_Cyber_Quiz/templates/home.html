@@ -110,23 +110,23 @@ li{
     </div>
 
 
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        document.getElementById("userForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            console.log("Form submission initiated.");
-
-            const emp_id = document.getElementById("emp_id").value.trim();
-            const Pattern = /^[0-9]+$/;
-
-            if (!Pattern.test(emp_id)) {
-                alert(" should only contain positive numbers.");
-                return;
-            }
-            event.target.submit();
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("userForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+                console.log("Form submission initiated.");
+    
+                const emp_id = document.getElementById("emp_id").value.trim();
+                const Pattern = /^[0-9]+$/;
+    
+                if (!Pattern.test(emp_id)) {
+                    alert("Employee ID should only contain positive numbers.");
+                    return;
+                }
+                event.target.submit();
+            });
         });
-    });
-</script>
+    </script>
 <script>
 // Get the modal
 var modal = document.getElementById("myModal");

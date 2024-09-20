@@ -64,8 +64,13 @@
             </div>
         {% endif %}
         
-        <!-- Always show retake button -->
-        <p class="retest_link"><a href="{% url 'start_quiz' %}" class="btn btn-primary mt-3">Retake Quiz</a></p><br>
+        <p>Time taken to complete the quiz: {{ time_taken }} minutes</p>
+        <!-- Retake Test Button with Retest Alert -->
+        <p class="retest_link">
+            <a href="{% url 'start_quiz' %}" class="btn btn-warning mt-3" onclick="showRetestAlert()">
+                Retake Quiz
+            </a>
+        </p>
 
         <h3>Quiz Details</h3>
         <div class="accordion" id="quizDetails">
@@ -102,6 +107,26 @@
     </div> 
 
     <script>
+        function showRetestAlert() {
+            // Get the retest count from a template variable
+            const retestCount = {{ quiz_result.retest }};
+            alert(`You are about to take the test for the ${retestCount + 1} time.`);
+        }
+        
+        // Prevent back button navigation after quiz submission
+        if (window.history.replaceState) {
+            window.history.replaceState(null, null, window.location.href);
+        }
+        
+        window.onpopstate = function() {
+            // Redirect to the main page if the user presses the back button
+            window.location.href = "{% url 'home' %}";
+        };
+    </script>
+    
+
+    <script>
+
         // Prevent back button navigation after quiz submission
         if (window.history.replaceState) {
             window.history.replaceState(null, null, window.location.href);
@@ -112,8 +137,6 @@
             window.location.href = "{% url 'home' %}";
         };
     </script>
-    
-
 
 <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.11.6/dist/umd/popper.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.min.js"></script>
