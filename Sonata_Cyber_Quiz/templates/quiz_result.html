@@ -65,7 +65,7 @@
             </div>
         {% endif %}
         
-        <p>Time taken to complete the quiz: {{ time_taken }} minutes</p>
+        {% comment %} <p>Time taken to complete the quiz: {{ time_taken }} minutes</p> {% endcomment %}
         <!-- Retake Test Button with Retest Alert -->
         <p class="retest_link">
             <a href="{% url 'start_quiz' %}" class="btn btn-warning mt-3" onclick="showRetestAlert()">

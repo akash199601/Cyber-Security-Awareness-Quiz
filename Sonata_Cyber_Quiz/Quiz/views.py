@@ -64,6 +64,7 @@ def start_quiz(request):
 
 def submit_quiz(request):
     if request.method == 'POST':
+        
         candidate_id = request.session.get('candidate_id')
         if not candidate_id:
             return redirect('home')
@@ -77,6 +78,8 @@ def submit_quiz(request):
         correct_answers = 0
         total_questions = 0
         details = []
+        is_retest = False
+        quiz_result = None  # Initialize quiz_result
 
         for question in questions:
             total_questions += 1
@@ -142,6 +145,7 @@ def submit_quiz(request):
                 wrong_answers=wrong_answers,
                 employee_id=candidate.employee_id,
                 details=details,  # Store details as JSON or text
+                
                 retest=1
             )
             
@@ -156,7 +160,7 @@ def submit_quiz(request):
             'score_percentage': score_percentage,
             'details': details,
             'quiz_result' : quiz_result,
-            'is_retest' : is_retest
+            'is_retest' : is_retest 
             
         })
 
