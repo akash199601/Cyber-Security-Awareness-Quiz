@@ -23,27 +23,23 @@
             color: #c52167;
         }
         body {
-            height: auto;
+            height: 100vh; /* Full height */
             width: 100%;
             padding: 10px;
             background-image: url("{% static 'image1.png' %}");
             background-repeat: no-repeat;
             background-attachment: fixed;
             background-size: cover;
+            overflow: hidden; /* Prevent scrolling of body */
         }
         .container {
-            margin-left: 15%;
-            margin-right: 15%;
-            margin-top: 10%;
+            margin: auto;
+            margin-top: 80px; 
             padding: 20px 15px;
             background-color: rgba(255, 255, 255, 0.9);
             border-radius: 10px;
-            height: 850px;
-        }
-        @media(max-width: 460px) {
-            .container {
-                margin: 100px auto;
-            }
+            height: 85vh; /* Set height to allow scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
         }
         label.box {
             display: flex;
@@ -88,14 +84,17 @@
             border-radius: 25px;
             margin-top: 20px;
         }
-        @media(max-width: 450px) {
-            .subject {
-                font-size: 12px;
-            }
-        }
-        form{
-            height: 85%;
-            overflow-x: hidden;
+        #timer {
+            font-size: 1.2rem; /* Timer font size */
+            position: fixed; /* Keep timer fixed */
+            top: 30px; /* Position from top */
+            left: 50%; 
+            background-color: white;/* Center horizontally */
+            padding: 5px 10px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+            transform: translateX(-50%); /* Adjust to exactly center */
+            z-index: 1000; /* Bring it above other elements */
         }
     </style>
 </head>
