@@ -19,7 +19,7 @@ This project is a **Cyber Security Awearnes** for employees where users can take
 ## Installation Instructions
 1. Clone the repository:
    ```bash
-   git clone https://github.com/your-repository-url.git
+   git clone https://github.com/akash199601/17-Sep-2024/tree/main
 
 2# Navigate to the project directory:   
 - **cd project-directory
