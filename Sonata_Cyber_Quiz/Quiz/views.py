@@ -2,28 +2,38 @@ import json
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from .forms import CandidateForm, CheckStatusForm, QuizForm
-from .models import Option, Question, Candidate, QuizResult
+from .models import EmployeeMaster, Option, Question, Candidate, QuizResult
 from django.utils import timezone
 from datetime import datetime
 
 def home(request):
+    error = None
     if request.method == 'POST':
         form = CandidateForm(request.POST)
         if form.is_valid():
             candidate_name = form.cleaned_data['name']
             employee_id = form.cleaned_data['employee_id']
+            # Check if the employee exists in the master database
+            try:
+                employee = EmployeeMaster.objects.using('employee_master').get(employee_id=employee_id)
+                
+                # If employee exists in the master database, check if they are already in the quiz system
+
+                # Save candidate details
+                candidate, created = Candidate.objects.get_or_create(
+                name= candidate_name,
+                employee_id=employee.employee_id
+                )
+                request.session['candidate_id'] = candidate.id
             
-            # Save candidate details
-            candidate, created = Candidate.objects.get_or_create(
-                name=candidate_name,
-                employee_id=employee_id
-            )
-            request.session['candidate_id'] = candidate.id
-            
-            return redirect('start_quiz')
+                return redirect('start_quiz')
+            except EmployeeMaster.DoesNotExist:
+                # If employee doesn't exist, show an error message
+                error = 'User not found. Please enter a valid Employee ID.'
+                return render(request, 'home.html', {'form': form, 'error': error})        
     else:
         form = CandidateForm()
-    return render(request, 'home.html', {'form': form})
+    return render(request, 'home.html', {'form': form,'error':error})
 
 
 # def start_quiz(request):

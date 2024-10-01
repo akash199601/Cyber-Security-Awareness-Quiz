@@ -96,7 +96,7 @@ li{
 
 
     <!-- The Modal -->
-    <div id="myModal" class="modal">
+    <div id="myModal" class="modal" style="display: {{ error|default:'none' }};">
         <!-- Modal content -->
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -105,6 +105,11 @@ li{
                 {% csrf_token %}
                 {{ form.as_p }}
                 <button type="submit" class="btn btn-primary">Submit</button>
+                <!-- Display the error message if user not found -->
+                {% if error %}
+                <p style="color: red;">{{ error }}</p>
+                {% endif %}
+              
             </form>
         </div>
     </div>
@@ -156,6 +161,11 @@ window.onclick = function(event) {
         modal.style.display = "none";
     }
 
+}
+
+// Keep the modal open if there's an error
+if ("{{ error }}") {
+    modal.style.display = "block";
 }
 
 </script>    

@@ -110,6 +110,17 @@ DATABASES = {
             "driver": "ODBC Driver 17 for SQL Server",
         },
     },
+    "employee_master": {
+        "ENGINE": "mssql",
+        "NAME": "HR",
+        "USER": "SFPL_HR",
+        "PASSWORD": "$SS0nata09876",
+        "HOST": "172.17.130.207",
+        "PORT": "1433",
+        "OPTIONS": {
+            "driver": "ODBC Driver 17 for SQL Server",
+        },
+    },
 }
 
 # Password validation

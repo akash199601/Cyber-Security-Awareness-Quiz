@@ -37,3 +37,10 @@ class QuizResult(models.Model):
         return '__all__'
 
 
+class EmployeeMaster(models.Model):
+    employee_id = models.IntegerField(primary_key=True)
+    first_name = models.CharField(max_length=50)
+
+    class Meta:
+        db_table = 'EmployeeMaster'  # This should match the actual table name in the master database
+        managed = False  # Since Django should not manage the migrations of this table
