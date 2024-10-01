@@ -15,13 +15,13 @@ def home(request):
             employee_id = form.cleaned_data['employee_id']
             # Check if the employee exists in the master database
             try:
-                employee = EmployeeMaster.objects.using('employee_master').get(employee_id=employee_id)
+                employee = EmployeeMaster.objects.using('employee_master').get(employee_id=employee_id, first_name = candidate_name)
                 
                 # If employee exists in the master database, check if they are already in the quiz system
 
                 # Save candidate details
                 candidate, created = Candidate.objects.get_or_create(
-                name= candidate_name,
+                name= employee.first_name,
                 employee_id=employee.employee_id
                 )
                 request.session['candidate_id'] = candidate.id
@@ -29,7 +29,7 @@ def home(request):
                 return redirect('start_quiz')
             except EmployeeMaster.DoesNotExist:
                 # If employee doesn't exist, show an error message
-                error = 'User not found. Please enter a valid Employee ID.'
+                error = 'User not found. Please enter a valid Employee ID. and First Name'
                 return render(request, 'home.html', {'form': form, 'error': error})        
     else:
         form = CandidateForm()
