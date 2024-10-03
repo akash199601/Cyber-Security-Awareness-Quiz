@@ -2,39 +2,86 @@ import json
 from pyexpat.errors import messages
 from django.shortcuts import get_object_or_404, render, redirect
 from .forms import CandidateForm, CheckStatusForm, QuizForm
-from .models import EmployeeMaster, Option, Question, Candidate, QuizResult
+from .models import EmployeeMaster,LoginStatus , Option, Question, Candidate, QuizResult
 from django.utils import timezone
-from datetime import datetime
+from datetime import timedelta
+from django.db import connections
 
 def home(request):
-    error = None
     if request.method == 'POST':
         form = CandidateForm(request.POST)
         if form.is_valid():
-            candidate_name = form.cleaned_data['name']
             employee_id = form.cleaned_data['employee_id']
-            # Check if the employee exists in the master database
-            try:
-                employee = EmployeeMaster.objects.using('employee_master').get(employee_id=employee_id, first_name = candidate_name)
-                
-                # If employee exists in the master database, check if they are already in the quiz system
-
-                # Save candidate details
-                candidate, created = Candidate.objects.get_or_create(
-                name= employee.first_name,
-                employee_id=employee.employee_id
-                )
-                request.session['candidate_id'] = candidate.id
+            password = form.cleaned_data['password']
             
-                return redirect('start_quiz')
-            except EmployeeMaster.DoesNotExist:
-                # If employee doesn't exist, show an error message
-                error = 'User not found. Please enter a valid Employee ID. and First Name'
-                return render(request, 'home.html', {'form': form, 'error': error})        
+            # Get the login status for this employee_id
+            login_status, created = LoginStatus.objects.get_or_create(employee_id=employee_id)
+
+            # Check if the user is blocked
+            if login_status.status == 'blocked':
+                # Check if the blocking duration has passed (24 hours)
+                if timezone.now() - login_status.blocked_at > timedelta(hours=24):
+                    # Unblock the user after 24 hours
+                    login_status.status = 'active'
+                    login_status.failed_attempts = 0
+                    login_status.blocked_at = None
+                    login_status.save()
+                else:
+                    # If still blocked, return an error message
+                    error = "Your account is blocked. Please try again after 24 hours."
+                    return render(request, 'home.html', {'form': form, 'error': error})
+
+            # Query to match employee_id and password
+            with connections['employee_master'].cursor() as cursor:
+                cursor.execute("""
+                    SELECT SI.empId, SI.password, EM.first_name, EM.surname
+                    FROM signUp AS SI
+                    LEFT JOIN EmployeeMaster AS EM ON SI.empId = EM.employee_id
+                    WHERE SI.empId = %s AND SI.password = %s
+                """, [employee_id, password])
+
+                result = cursor.fetchone()
+                
+                # If result is found
+                if result:
+                    empId = result[0]
+                    first_name = result[2]
+                    surname = result[3]
+                    full_name = first_name +''+ surname
+                    print("fullname", full_name)
+                    candidate, created = Candidate.objects.get_or_create(
+                        name=full_name,
+                        employee_id=empId
+                    )
+                    request.session['candidate_id'] = candidate.id
+                    
+                    # Reset failed attempts on successful login
+                    login_status.failed_attempts = 0
+                    login_status.status = 'active'
+                    login_status.save()
+                    
+                    return redirect('start_quiz')
+                else:
+                    # Increment the failed attempts count
+                    login_status.failed_attempts += 1
+                    
+                    # Check if failed attempts exceed the limit
+                    if login_status.failed_attempts >= 3:
+                        login_status.status = 'blocked'
+                        login_status.blocked_at = timezone.now()  # Record when the user is blocked
+                        error = "Your account has been blocked due to too many failed login attempts."
+                    else:
+                        error = "Invalid Employee ID or Password. Please try again."
+                    
+                    # Save the login status
+                    login_status.save()
+                    
+            # Render home with error message
+            return render(request, 'home.html', {'form': form, 'error': error})
+
     else:
         form = CandidateForm()
-    return render(request, 'home.html', {'form': form,'error':error})
-
+    return render(request, 'home.html', {'form': form})
 
 # def start_quiz(request):
 #     if 'candidate_id' not in request.session:

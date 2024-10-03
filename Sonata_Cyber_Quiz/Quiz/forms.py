@@ -4,7 +4,8 @@ from django import forms
 
 class CandidateForm(forms.Form):
     employee_id = forms.CharField(label="Employee ID", max_length=6, required=True,  widget=forms.TextInput(attrs={'class': 'form-control','id':'emp_id'}))
-    name = forms.CharField(label="Enter Your First Name", max_length=20, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+    password = forms.CharField(label="Enter Your Password", max_length=20, required=True, widget=forms.TextInput(attrs={'class': 'form-control'}))
+
 class QuizForm(forms.Form):
     def __init__(self, *args, **kwargs):
         questions = kwargs.pop('questions', None)

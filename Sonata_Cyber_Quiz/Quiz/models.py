@@ -40,7 +40,29 @@ class QuizResult(models.Model):
 class EmployeeMaster(models.Model):
     employee_id = models.IntegerField(primary_key=True)
     first_name = models.CharField(max_length=50)
+    surname = models.CharField(max_length=50)
 
     class Meta:
         db_table = 'EmployeeMaster'  # This should match the actual table name in the master database
         managed = False  # Since Django should not manage the migrations of this table
+        
+class signUP(models.Model):
+    password = models.CharField(max_length=50)
+    empId = models.IntegerField()
+    class Meta:
+        db_table = 'signUP'  # This should match the actual table name in the master database
+        managed = False  # Since Django should not manage the migrations of this table
+        
+
+class LoginStatus(models.Model):
+    employee_id = models.IntegerField(unique=True)
+    failed_attempts = models.IntegerField(default=0)
+    status = models.CharField(max_length=50, default='active')
+    blocked_at = models.DateTimeField(null=True)
+
+    class Meta:
+        db_table = 'loginstatus'
+    
+    def __str__(self):
+        return '__all__'
+    
