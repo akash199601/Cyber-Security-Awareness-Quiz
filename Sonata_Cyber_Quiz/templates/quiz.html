@@ -111,7 +111,7 @@
             {% for question, options in questions_with_options %}
             <div class="row mb-4">
                 <div class="col-12">
-                    <p class="fw-bold">{{ forloop.counter }}. {{ question.question_text }}</p>
+                    <p class="fw-bold" style="font-size:1.2rem;">{{ forloop.counter }}. {{ question.question_text }}</p>
                     {% for option in options %}
                     <div>
                         <input type="radio" id="option-{{ option.id }}" name="question-{{ question.id }}" value="{{ option.id }}">
