@@ -7,6 +7,16 @@ from django.utils import timezone
 from datetime import timedelta
 from django.db import connections
 
+
+from django.shortcuts import render
+
+def custom_404(request, exception):
+    return render(request, '404.html', status=404)
+
+def custom_500(request):
+    return render(request, '500.html', status=500)
+
+
 def home(request):
     if request.method == 'POST':
         form = CandidateForm(request.POST)
@@ -60,7 +70,8 @@ def home(request):
                     login_status.status = 'active'
                     login_status.save()
                     
-                    return redirect('start_quiz')
+                    # return redirect('start_quiz')
+                    return redirect('quiz_section')
                 else:
                     # Increment the failed attempts count
                     login_status.failed_attempts += 1
@@ -90,24 +101,105 @@ def home(request):
 #     questions = Question.objects.all()
 #     return render(request, 'quiz.html', {'questions': questions})
 
-def start_quiz(request):
+def quiz_section(request):
+    if 'candidate_id' not in request.session:
+        return redirect('home')
+
+    candidate_id = request.session.get('candidate_id')
+  
+    # Define available sections with descriptions and video URLs
+    sections = {
+        'Internet Safety': {
+            'description': 'Learn about keeping your information secure online.',
+            'video_url': 'https://www.youtube.com/embed/kQVp2VxlRm4'
+        },
+        'Email Privacy': {
+            'description': 'Understand how to protect your email and personal data.',
+            'video_url': 'https://www.youtube.com/embed/mtB3EBk1Hpg'
+        },
+        'General': {
+            'description': 'Test your knowledge on general cyber safety practices.',
+            'video_url': 'https://www.youtube.com/embed/s7ZjOS_XKmI'
+          
+        }
+    }
+
+    # Create lists to track completed and not completed sections
+    completed_sections = []
+    not_completed_sections = []
+
+    for section, details in sections.items():
+        result = QuizResult.objects.filter(candidate_id=candidate_id, section=section).order_by('-id').first()
+        section_data = {
+            'name': section,
+            'description': details['description'],
+            'video_url': details['video_url']
+        }
+        if result and result.section_complete == 1:
+            completed_sections.append({
+                **section_data,
+                'score': result.score,
+                'score_percentage': (result.score / result.total_questions) * 100 if result.total_questions > 0 else 0
+            })
+        else:
+            not_completed_sections.append(section_data)
+
+    return render(request, 'quiz_sections.html', {
+        'completed_sections': completed_sections,
+        'not_completed_sections': not_completed_sections,
+        
+    })
+
+
+# def start_quiz(request):
+#     if 'candidate_id' not in request.session:
+#         return redirect('home')
+
+#      # Retrieve candidate_id from the session
+#     candidate_id = request.session.get('candidate_id')
+    
+#     # Check if there's a previous quiz result for this candidate
+#     try:
+#         quiz_result = QuizResult.objects.get(candidate_id=candidate_id)
+#         retest_count = quiz_result.retest
+#         is_retest = True  # The candidate has taken the quiz before
+#     except QuizResult.DoesNotExist:
+#         retest_count = 0  # First attempt
+#         is_retest = False  # This is the first attempt
+#     # Retrieve all questions
+#     questions = Question.objects.all()
+
+#     # Retrieve all options related to these questions
+#     options = Option.objects.filter(question_id__in=[q.id for q in questions])
+
+#     # Prepare a list of tuples (question, options) for easy iteration in template
+#     questions_with_options = [(q, [opt for opt in options if opt.question_id == q.id]) for q in questions]
+
+#     # Pass questions and their options to the template
+#     return render(request, 'quiz.html', {'questions_with_options': questions_with_options,'retest_count': retest_count, 'is_retest': is_retest })
+
+def start_quiz(request, section=None):
     if 'candidate_id' not in request.session:
         return redirect('home')
 
      # Retrieve candidate_id from the session
     candidate_id = request.session.get('candidate_id')
-    
+     # Check if there's a previous quiz result for this candidate
+    quiz_results = QuizResult.objects.filter(candidate_id=candidate_id)
     # Check if there's a previous quiz result for this candidate
-    try:
-        quiz_result = QuizResult.objects.get(candidate_id=candidate_id)
+    if quiz_results.exists():
+        # Assume the most recent quiz result is the one to use
+        quiz_result = quiz_results.latest('date_taken')  # Assuming 'date_taken' field exists to track quiz result date
         retest_count = quiz_result.retest
         is_retest = True  # The candidate has taken the quiz before
-    except QuizResult.DoesNotExist:
+    else:
         retest_count = 0  # First attempt
         is_retest = False  # This is the first attempt
     # Retrieve all questions
-    questions = Question.objects.all()
-
+    # questions = Question.objects.all()
+    
+    # Fetch questions from the selected section
+    questions = Question.objects.filter(section=section)        
     # Retrieve all options related to these questions
     options = Option.objects.filter(question_id__in=[q.id for q in questions])
 
@@ -115,11 +207,10 @@ def start_quiz(request):
     questions_with_options = [(q, [opt for opt in options if opt.question_id == q.id]) for q in questions]
 
     # Pass questions and their options to the template
-    return render(request, 'quiz.html', {'questions_with_options': questions_with_options,'retest_count': retest_count, 'is_retest': is_retest })
+    return render(request, 'quiz.html', {'questions_with_options': questions_with_options,'retest_count': retest_count, 'is_retest': is_retest, 'section': section })
 
 
-
-def submit_quiz(request):
+def submit_quiz(request,section):
     if request.method == 'POST':
         
         candidate_id = request.session.get('candidate_id')
@@ -131,7 +222,7 @@ def submit_quiz(request):
         except Candidate.DoesNotExist:
             return redirect('home')
             
-        questions = Question.objects.all()
+        questions = Question.objects.filter(section=section)
         correct_answers = 0
         total_questions = 0
         details = []
@@ -185,13 +276,14 @@ def submit_quiz(request):
         
          # Check if a result already exists for this candidate
         try:
-            quiz_result = QuizResult.objects.get(candidate_id=candidate.id)
+            quiz_result = QuizResult.objects.get(candidate_id=candidate.id,section=section)
             quiz_result.score = score
             quiz_result.total_questions = total_questions
             quiz_result.wrong_answers = wrong_answers
             quiz_result.details = details  # Store details as JSON or text
             quiz_result.retest += 1
             is_retest = True# Increment retest counter
+            quiz_result.section_complete = 1 
             quiz_result.save()
         except QuizResult.DoesNotExist:
             # If result doesn't exist, create a new one
@@ -202,7 +294,7 @@ def submit_quiz(request):
                 wrong_answers=wrong_answers,
                 employee_id=candidate.employee_id,
                 details=details,  # Store details as JSON or text
-                
+                section_complete = 1,
                 retest=1
             )
             
@@ -217,7 +309,8 @@ def submit_quiz(request):
             'score_percentage': score_percentage,
             'details': details,
             'quiz_result' : quiz_result,
-            'is_retest' : is_retest 
+            'is_retest' : is_retest,
+            'section' : section,
             
         })
 
