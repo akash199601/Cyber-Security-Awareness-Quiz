@@ -94,12 +94,6 @@ def home(request):
         form = CandidateForm()
     return render(request, 'home.html', {'form': form})
 
-# def start_quiz(request):
-#     if 'candidate_id' not in request.session:
-#         return redirect('home')
-
-#     questions = Question.objects.all()
-#     return render(request, 'quiz.html', {'questions': questions})
 
 def quiz_section(request):
     if 'candidate_id' not in request.session:
