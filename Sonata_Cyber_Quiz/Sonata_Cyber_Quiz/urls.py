@@ -19,6 +19,12 @@ from django.views.static import serve
 
 from . import settings
 
+from django.conf.urls import handler404, handler500
+
+handler404 = 'Quiz.views.custom_404'
+handler500 = 'Quiz.views.custom_500'
+
+
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('Quiz.urls')),

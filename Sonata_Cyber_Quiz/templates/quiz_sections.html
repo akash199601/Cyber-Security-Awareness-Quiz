@@ -1,0 +1,170 @@
+{% extends 'base.html' %}
+
+{% block main_content %}
+
+<style>
+    .quiz-sections {
+        list-style-type: none;
+        padding: 0;
+    }
+    
+    .quiz-section {
+        margin: 10px 0;
+        display: flex;
+    }
+    
+    .completed {
+        color: green;
+        font-weight: bold;
+    }
+    
+    .button {
+        margin-left: 10px;
+        padding: 5px 10px;
+        text-decoration: none;
+        background-color: #007BFF;
+        color: white;
+        border-radius: 5px;
+    }
+    
+    .button:hover {
+        background-color: #0056b3;
+    }
+    
+    .child-section1{
+        width: 50%;
+        padding : 10px;
+    }
+
+    .child-section2{
+        width:50%;
+        padding:20px;
+    }
+
+    strong{
+        margin: 10px 0px;
+        font-size: 20px;
+    }
+
+    p{
+        margin:10px 0px;
+    }
+
+    video{
+        width:100%;
+    }
+
+    figcaption {
+        text-align: center;
+        margin-top: 8px;
+        color: #555;
+        font-size: 0.9em;
+    }
+
+    @media(max-width: 460px){
+        .quiz-section {
+            display: block;
+        }
+        .child-section1{
+            width:100%;
+            padding: 0px;
+        }
+        .child-section2{
+            width: 100%;
+            padding: 0px;
+        }
+    }
+</style>
+
+{% comment %} <div class="container">
+    <h2>Choose a section to retake</h2>
+    <ul class="quiz-sections">
+        {% for section in completed_sections %}
+            <li class="quiz-section">
+                {{ section }}
+                <span class="completed">(Completed)</span>
+                <a class="button retake" href="{% url 'start_quiz' section=section %}">Retake</a>
+            </li>
+        {% endfor %}
+        {% for section in not_completed_sections %}
+            <li class="quiz-section">
+                {{ section }}
+                <a class="button start" href="{% url 'start_quiz' section=section %}">Start</a>
+            </li>
+        {% endfor %}
+    </ul>
+</div> {% endcomment %}
+
+<div class="container">
+    <h2>Choose a section to start or retake</h2>
+    <ul class="quiz-sections">
+        {% for section in completed_sections %}
+            <li class="quiz-section completed">
+                <div class="child-section1">
+                    <strong>{{ section.name }}</strong>
+                    <p>{{ section.description }}</p>
+                    <p>Score: {{ section.score }}</p>
+                    {% if section.score_percentage < 50 %}
+                        <div class="alert alert-danger" role="alert">
+                            Your score is below 50%. Please retake the quiz to improve your knowledge.
+                        </div>
+                    {% elif section.score_percentage < 75 %}
+                        <div class="alert alert-warning" role="alert">
+                            Good effort! Your score is above 50%, but there's room for improvement.
+                        </div>
+                    {% elif section.score_percentage < 100 %}
+                        <div class="alert alert-success" role="alert">
+                            Great job! Your score is above 75%. You're almost there!
+                        </div>
+                    
+                    {% elif section.score_percentage == 100 %}
+                        <div class="alert alert-success" role="alert">
+                            Excellent work! You scored 100%. Very good
+                        </div>
+                    {% else %}
+                        
+                    {% endif %}
+                    <a class="button retake" href="{% url 'start_quiz' section=section.name %}">Retake</a>
+                </div>
+                <div class="child-section2">
+                    {% comment %} <video width="320" height="240" controls>
+                        <source src="{{ section.video_url  }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video> {% endcomment %}
+                    <iframe width="320" height="240" src="{{ section.video_url }}" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>Your browser does not support the video tag.
+                    </iframe>
+                    <figcaption>Learning Video</figcaption>
+                </div>
+            </li>
+        {% endfor %}
+        {% for section in not_completed_sections %}
+            <li class="quiz-section not-completed">
+                <div class="child-section1">
+                    <strong>{{ section.name }}</strong>
+                    <p>{{ section.description }}</p>
+                    <span class="status">Status : Not Completed</span>
+                    <a class="button start" href="{% url 'start_quiz' section=section.name %}">Start</a>
+                </div>
+                <div class="child-section2">
+                    {% comment %} <video width="320" height="240" controls>
+                        <source src="{{ section.video_url }}" type="video/mp4">
+                        Your browser does not support the video tag.
+                    </video> {% endcomment %}
+                    <iframe width="320" height="240" src="{{ section.video_url }}" 
+                        frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                        allowfullscreen>Your browser does not support the video tag.
+                    </iframe>
+                    <figcaption>Learning Video</figcaption>
+                </div>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+
+<script src="http://code.jquery.com/jquery-3.3.1.js"></script>
+
+
+{% endblock main_content%}

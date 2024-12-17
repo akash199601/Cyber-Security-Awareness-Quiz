@@ -105,8 +105,10 @@
         You are about to take the test for the {{ retest_count|add:1|ordinal }} time.
     </div>
     {% endif %}
+    <!-- Google Translate Widget -->
+    <div id="google_translate_element" class="text-center mb-4"></div>
         <p id="timer" class="text-center">Time left: 20:00</p>
-        <form id="quiz-form" method="POST" action="{% url 'submit_quiz' %}">
+        <form id="quiz-form" method="POST" action="{% url 'submit_quiz' section=section %}">
             {% csrf_token %}
             {% for question, options in questions_with_options %}
             <div class="row mb-4">
@@ -185,7 +187,18 @@
         });
     </script>
     
-    
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',  // Default page language (English)
+                includedLanguages: 'en,hi',  // Only English and Hindi are included
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,  // Simple layout with no extra information
+                autoDisplay: false  // Prevents automatic language selection
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
     
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
