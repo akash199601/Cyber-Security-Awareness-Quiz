@@ -278,12 +278,14 @@ def submit_quiz(request,section):
             quiz_result.retest += 1
             is_retest = True# Increment retest counter
             quiz_result.section_complete = 1 
+            quiz_result.section = section
             quiz_result.save()
         except QuizResult.DoesNotExist:
             # If result doesn't exist, create a new one
             QuizResult.objects.create(
                 candidate_id=candidate.id,
                 score=score,
+                section=section,
                 total_questions=total_questions,
                 wrong_answers=wrong_answers,
                 employee_id=candidate.employee_id,
