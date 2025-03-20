@@ -1,0 +1,643 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Employee KYC Verification</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: Arial, sans-serif; }
+    body { display: flex; height: 100vh; background: #f4f4f4; }
+    .sidebar {
+      width: 250px;
+      background: #2C3E50;
+      color: white;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    .sidebar img { width: 200px; margin-bottom: 20px; }
+    .nav-button {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 10px;
+      background: #34495E;
+      color: white;
+      text-align: center;
+      border: none;
+      cursor: pointer;
+      font-size: 16px;
+      transition: 0.3s;
+    }
+    .nav-button:hover, .nav-button.active { background: #1ABC9C; }
+    .main-container { flex: 1; padding: 20px; overflow-y: auto; }
+    header { background: #4a90e2; padding: 20px; text-align: center; color: #fff; margin-bottom: 20px; }
+    .content-container { gap: 20px; }
+    .table-container { flex: 2; background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1); overflow-x: auto; margin-bottom: 20px;}
+    .image-preview-container {
+      background: white; padding: 15px; border-radius: 8px; box-shadow: 0 0 10px rgba(0,0,0,0.1);display:flex
+    }
+    .filters {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+    select {
+      padding: 8px;
+      width: 150px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 10px; border: 1px solid #ddd; text-align: center; }
+    th { background-color: #f2f2f2; }
+    tr:nth-child(even) { background: #fafafa; }
+    tr:hover { background-color: #d1ecf1; cursor: pointer; }
+    button {
+      padding: 8px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    .yes-btn { background-color: #28a745; color: #fff; }
+    .no-btn { background-color: #dc3545; color: #fff; }
+    .image-item { text-align: center;margin: 5px; }
+    .image-item img {
+      width: 150px;
+      height:auto;
+      cursor: pointer;
+      transition: transform 0.3s;
+    }
+   
+
+    /* Full-Screen Zoom Modal */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0,0,0,0.8);
+    text-align: center;
+}
+
+/* Close Button */
+.close {
+    position: absolute;
+    top: 10px;
+    right: 20px;
+    font-size: 30px;
+    color: white;
+    cursor: pointer;
+}
+
+/* Zoomed Image */
+.modal-content {
+    max-width: 90%;
+    max-height: 90%;
+    margin-top: 5%;
+    border-radius: 10px;
+}
+  </style>
+
+  {% comment %} <script>
+    let employees = [
+      { id: "001", name: "Amit Sharma", doj: "2022-05-10", dob: "1990-08-15", mobile: "9876543210", pan: "ABCDE1234F", aadhar: "123456789012", division: "North", region: "Delhi", branch: "Connaught Place", panImg: "pan1.jpg", aadharFront: "aadhar1_front.jpg", aadharBack: "aadhar1_back.jpg" },
+      { id: "002", name: "Neha Verma", doj: "2021-11-20", dob: "1995-03-22", mobile: "9876543211", pan: "ABCDE5678G", aadhar: "987654321098", division: "South", region: "Bangalore", branch: "MG Road", panImg: "pan2.jpg", aadharFront: "aadhar2_front.jpg", aadharBack: "aadhar2_back.jpg" },
+    ];
+
+    function filterEmployees() {
+      let selectedDivision = document.getElementById("divisionFilter").value;
+      let selectedRegion = document.getElementById("regionFilter").value;
+      let selectedBranch = document.getElementById("branchFilter").value;
+
+      let filtered = employees.filter(emp =>
+        (selectedDivision === "" || emp.division === selectedDivision) &&
+        (selectedRegion === "" || emp.region === selectedRegion) &&
+        (selectedBranch === "" || emp.branch === selectedBranch)
+      );
+
+      displayEmployees(filtered);
+    }
+
+    function displayEmployees(employeeList) {
+      let tbody = document.getElementById("employeeTableBody");
+      tbody.innerHTML = "";
+      employeeList.forEach(emp => {
+        let row = `<tr onclick="updateImagePreview('${emp.panImg}', '${emp.aadharFront}', '${emp.aadharBack}')">
+          <td>${emp.id}</td>
+          <td>${emp.name}</td>
+          <td>${emp.doj}</td>
+          <td>${emp.dob}</td>
+          <td>${emp.mobile}</td>
+          <td>${emp.pan}</td>
+          <td>${emp.aadhar}</td>
+          <td>Pending</td>
+          <td>
+            <button class="yes-btn">Yes</button>
+            <button class="no-btn">No</button>
+          </td>
+        </tr>`;
+        tbody.innerHTML += row;
+      });
+    }
+
+    function updateImagePreview(panImg, aadharFront, aadharBack) {
+      document.getElementById("panImage").src = panImg || "https://via.placeholder.com/200?text=No+Image";
+      document.getElementById("aadharFrontImage").src = aadharFront || "https://via.placeholder.com/200?text=No+Image";
+      document.getElementById("aadharBackImage").src = aadharBack || "https://via.placeholder.com/200?text=No+Image";
+    }
+
+    window.onload = function() { displayEmployees(employees); };
+  </script> {% endcomment %}
+
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+  $(document).ready(function() {
+      $("#division").change(function() {
+          var divisionalid = $(this).val();
+          if (divisionalid) {
+              $.getJSON("/get-regions/", { divisionalid: divisionalid }, function(data) {
+                  $("#region").html('<option value="">Select Region</option>');
+                  $.each(data.regions, function(index, region) {
+                      $("#region").append('<option value="'+region.regionid+'">'+region.regionname+'</option>');
+                  });
+              });
+          }
+      });
+  
+      $("#region").change(function() {
+          var regionid = $(this).val();
+          if (regionid) {
+              $.getJSON("/get-units/", { regionid: regionid }, function(data) {
+                  $("#unit").html('<option value="">Select Unit</option>');
+                  $.each(data.units, function(index, unit) {
+                      $("#unit").append('<option value="'+unit.unitid+'">'+unit.unitname+'</option>');
+                  });
+              });
+          }
+      });
+
+      $("#unit").change(function() {
+        var selectedUnitId = $(this).val();
+    
+        $.ajax({
+            url: "/get-emp/",  // Django View ka URL
+            type: "GET",  // Ya "POST" agar aap post request bhejna chahte hain
+            data: { unitid: selectedUnitId },  // Data jo bhejna hai
+            success: function(response) {
+                console.log("Response from server:", response);
+            },
+            error: function(error) {
+                console.log("Error:", error);
+            }
+        });
+      });
+
+  });
+  </script>
+
+  {% comment %} <script>
+    function fetchEmployees() {
+        var unit_id = document.getElementById("unitDropdown").value;
+        if (!unit_id) {
+            alert("Please select a unit ID.");
+            return;
+        }
+
+        $.ajax({
+            url: "/get-emp/",  // Change to your actual Django URL
+            type: "GET",
+            data: { unitid: unit_id },
+            success: function(response) {
+                var employees = response.employees;
+                var tableBody = $("#employeeTableBody");
+                tableBody.empty();  // Clear old data
+
+                if (employees.length === 0) {
+                    tableBody.append("<tr><td colspan='4'>No employees found</td></tr>");
+                } else {
+                    employees.forEach(function(emp) {
+                        tableBody.append(`
+                            <tr>
+                                <td>${emp.employee_id}</td>
+                                <td>${emp.first_name}</td>
+                                <td>${emp.DesigID}</td>
+                                <td>${emp.DeptID}</td>
+                            </tr>
+                        `);
+                    });
+                }
+            },
+            error: function() {
+                alert("Error fetching employees.");
+            }
+        });
+    }
+</script> {% endcomment %}
+    
+<script>
+  function goToReports() {
+      window.location.href = "/reports/";  // ✅ Replace with your actual page URL
+  }
+</script>
+
+</head>
+<body>
+  <div class="sidebar">
+    <img src="{% static 'logo.png' %}" alt="Company Logo">
+    <h3>HR Dashboard</h3>
+    <button class="nav-button active">Verification</button>
+    <button class="nav-button" onclick="goToReports()">Reports</button>
+    {% comment %} <button class="nav-button"><a href="{% url 'Logout' %}" style="color:white;">
+        <span>Log Out</span>
+        <i class="mdi mdi-logout ml-1"></i>
+    </a>
+    </button> {% endcomment %}
+  </div>
+
+  <div class="main-container">
+    <header><h2>Employee KYC Verification</h2></header>
+
+    <div class="filters">
+        <select id="division">
+            <option value="">Select Division</option>
+            {% for division in divisions %}
+            <option value="{{ division.divisionalid }}">{{ division.Divisionname }}</option>
+            {% endfor %}
+        </select>
+        
+        <select id="region">
+            <option value="">Select Region</option>
+        </select>
+        
+        <select id="unit">
+            <option value="">Select Unit</option>
+        </select>
+    </div>
+    <br>
+
+    <button style="color:white;background:blue;" onclick="runStoredProcedure()">Sync Data</button>
+
+    <h1 style="text-align:center">Pending Data</h1>
+    <br>
+    <div class="content-container">
+      <div class="table-container">
+        <table>
+            <thead>
+                <tr>
+                    <th>Emp ID</th>
+                    <th>Mobile</th>
+                    <th>AADHAR</th>
+                    <th>PAN</th>
+                    <th>DOB</th>
+                    <th>Verify</th>
+                </tr>
+            </thead>
+            <tbody id="pendingemployeeTableBody">
+              
+            </tbody>
+        </table>
+      </div>
+      <br>
+      <h3>Document Preview</h3>
+      {% comment %} <div class="image-preview-container">
+        
+          <div class="image-item"><img id="photoImage" src=""></div>
+          <div class="image-item"><img id="panImage" src=""></div>
+          <div class="image-item"><img id="aadharFrontImage" src=""></div>
+          <div class="image-item"><img id="aadharBackImage" src=""></div>
+    
+      </div> {% endcomment %}
+
+      <div class="image-preview-container">
+        <div class="image-item">
+            <img id="photoImage" src="photo.jpg" onclick="zoomImage(this, 'Photo ID')" >
+            <p class="caption">Photo ID</p>
+        </div>
+        <div class="image-item">
+            <img id="panImage" src="pan.jpg" onclick="zoomImage(this, 'PAN Card')">
+            <p class="caption">PAN Card</p>
+        </div>
+        <div class="image-item">
+            <img id="aadharFrontImage" src="aadhar_front.jpg" onclick="zoomImage(this, 'Aadhar Front')">
+            <p class="caption">Aadhar Front</p>
+        </div>
+        <div class="image-item">
+            <img id="aadharBackImage" src="aadhar_back.jpg" onclick="zoomImage(this, 'Aadhar Back')">
+            <p class="caption">Aadhar Back</p>
+        </div>
+      </div>
+    
+    <!-- Zoom Modal with Caption -->
+    <div id="imageModal" class="modal" onclick="closeZoom()">
+        <span class="close">&times;</span>
+        <img class="modal-content" id="zoomedImage">
+        {% comment %} <p id="zoomedCaption"></p> <!-- Caption Added Here --> {% endcomment %}
+    </div>
+    </div>
+    <br>
+    <h1 style="text-align:center">Completed Data</h1>
+    <br>
+    <div class="content-container">
+      <div class="table-container">
+        <table>
+            <thead>
+              <button id="refreshTable">Refresh Table</button>
+                <tr>
+                  <th>Emp ID</th>
+                  <th>Mobile</th>
+                  <th>AADHAR</th>
+                  <th>PAN</th>
+                  <th>DOB</th>
+
+                </tr>
+            </thead>
+            <tbody id="completedemployeeTableBody">
+                {% comment %} {% for e in emp %}
+                <tr>
+                  <td>{{e.EmpID}}</th>
+                  <td>{{e.MobileNo}}</td>
+                  <td>{{e.AdhaarNo}}</td>
+                  <td>{{e.PAN_Number}}</td>
+                  <td></td>
+                  <td></td>
+                </tr>
+                {% endfor %}  {% endcomment %}
+            </tbody>
+        </table>
+      </div>
+
+      <div class="image-preview-container">
+        <h3>Document Preview</h3>
+        <div class="image-item"><img id="panImage" src=""></div>
+        <div class="image-item"><img id="aadharFrontImage" src=""></div>
+        <div class="image-item"><img id="aadharBackImage" src=""></div>
+        <div class="image-item"><img id="dlImage" src=""></div>
+        <div class="image-item"><img id="passbookImage" src=""></div>
+
+      </div>
+    </div>
+
+  </div>
+
+
+
+
+<script>
+    function runStoredProcedure() {
+        fetch('/run-sp/', { method: 'GET' })
+        .catch(error => console.error('Error:', error));
+    }
+</script>
+
+<script>
+  function refreshCompletedEmployeeTable() {
+      $.ajax({
+          url: "/get_completed_employees/", // ✅ API endpoint jo updated data dega
+          type: "GET",
+          dataType: "json",
+          success: function(response) {
+              console.log("Updated Employee Data:", response.employees);
+
+              var tableBody = $("#completedemployeeTableBody");
+              tableBody.empty();  // ✅ Old table rows clear karo
+
+              if (response.employees.length === 0) {
+                  tableBody.append("<tr><td colspan='6'>No employees found</td></tr>");
+              } else {
+                  $.each(response.employees, function(index, e) {
+                      tableBody.append(
+                          "<tr>" +
+                              "<td>" + e.EmpID + "</td>" +
+                              "<td>" + e.MobileNo + "</td>" +
+                              "<td>" + e.AdhaarNo + "</td>" +
+                              "<td>" + e.PAN_Number + "</td>" +
+                              "<td>" + e.DOB + "</td>" +
+                          "</tr>"
+                      );
+                  });
+              }
+          },
+          error: function(xhr, status, error) {
+              console.log("Error refreshing table:", error);
+          }
+      });
+  }
+
+  // ✅ Call function every 30 seconds (optional)
+  setInterval(refreshCompletedEmployeeTable,30000);
+</script>
+
+
+<script>
+    $("#refreshTable").click(function() {
+        refreshCompletedEmployeeTable();
+    });
+</script>
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<script>
+
+  $(document).ready(function () {
+    // 🔹 Step 1: Load Employee List
+    $("#unit").change(function () {
+        var unitid = $(this).val();
+        if (unitid) {
+            $.ajax({
+                url: "/get-emp/",
+                type: "GET",
+                data: { unitid: unitid },
+                dataType: "json",
+                success: function (response) {
+                    $("#pendingemployeeTableBody").empty();
+                    var employees = response.employee_details;
+
+                    if (employees.length === 0) {
+                        $("#pendingemployeeTableBody").append("<tr><td colspan='6'>No employees found</td></tr>");
+                    } else {
+                        $.each(employees, function (index, emp) {
+                            $("#pendingemployeeTableBody").append(
+                                "<tr class='employee-row' data-id='" + emp.EmpID + "'>" +
+                                "<td>" + emp.EmpID + "</td>" +
+                                "<td>" + emp.MobileNo + "</td>" +
+                                "<td>" + emp.AdhaarNo + "</td>" +
+                                "<td>" + emp.PAN_Number + "</td>" +
+                                "<td>" + emp.DOB + "</td>" +
+                                "<td>" +
+                                "<button class='yes-btn' data-id='" + emp.EmpID + "'>Yes</button> " +
+                                "<button class='no-btn' data-id='" + emp.EmpID + "'>No</button>" +
+                                "</td>" +
+                                "</tr>"
+                            );
+                        });
+                    }
+                },
+                error: function (xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        }
+    });
+
+     // 🔹 Step 2: Fetch Images on Row Click
+     $(document).on("click", ".employee-row", function () {
+      var empid = $(this).data("id");
+    
+      // 🔹 Remove highlight from other rows and add to the clicked row
+      $(".employee-row").css("background-color", ""); // Reset all rows
+      $(this).css("background-color", "#94d994"); // Highlight selected row (Light Green)
+
+      $.ajax({
+          url: "/get-emp-images/",
+          type: "GET",
+          data: { empid: empid },
+          dataType: "json",
+          success: function (response) {
+              if (response.error) {
+                  alert(response.error);
+              } else {
+                  $("#photoImage").attr("src", response.Photo ? response.Photo : "");
+                
+                  $("#aadharFrontImage").attr("src", response.AdhaarFrontImg ? response.AdhaarFrontImg : "");
+                  $("#aadharBackImage").attr("src", response.AdhaarBackImg ? response.AdhaarBackImg : "");
+                  $("#panImage").attr("src", response.PAN_Img ? response.PAN_Img : "");
+              }
+          },
+          error: function (xhr, status, error) {
+              console.log("Error:", error);
+          }
+      });
+  });
+
+
+    // Handle Yes Button Click
+    $(document).on("click", ".yes-btn", function() {
+        var empId = $(this).data("id");
+        var row = $(this).closest("tr");
+        $.ajax({
+            url: "/update-is-processed/",
+            type: "POST",
+            data: { emp_id: empId },
+            headers: { "X-CSRFToken": "{{ csrf_token }}" },
+            success: function(response) {
+                if (response.status === "success") {
+                    alert("Employee ID: " + empId + " marked as processed!");
+                    row.remove(); // Remove row from table
+                } else {
+                    alert("Error: " + response.message);
+                }
+            },
+            error: function(xhr, status, error) {
+                alert("AJAX Error: " + error);
+            }
+        });
+    });
+
+    // Handle No Button Click
+    $(document).on("click", ".no-btn", function() {
+        var empId = $(this).data("id");
+        alert("You clicked No for Employee ID: " + empId);
+    });
+  });
+
+</script>  
+
+<script>
+    function zoomImage(imgElement) {
+        var modal = document.getElementById("imageModal");
+        var modalImg = document.getElementById("zoomedImage");
+
+        modal.style.display = "block"; // Show modal
+        modalImg.src = imgElement.src; // Set clicked image in modal
+    }
+
+    function closeZoom() {
+        document.getElementById("imageModal").style.display = "none";
+    }
+</script>
+
+{% comment %} <script>
+  $(document).ready(function() {
+    $("#unit").change(function() {
+        var unitid = $(this).val();
+        if (unitid) {
+            $.ajax({
+                url: "/get-emp/",
+                type: "GET",
+                data: { unitid: unitid },
+                dataType: "json",
+                success: function(response) {
+                    console.log("API Response:", response); // Debugging
+                    $("#pendingemployeeTableBody").empty(); // Clear old data
+
+                    var employees = response.employee_details;
+                    if (employees.length === 0) {
+                        $("#pendingemployeeTableBody").append("<tr><td colspan='4'>No employees found</td></tr>");
+                    } else {
+                        $.each(employees, function(index, emp) {
+                            $("#pendingemployeeTableBody").append(
+                                "<tr>" +
+                                    "<td>" + emp.EmpID + "</td>" +
+                                    "<td>" + emp.MobileNo + "</td>" +
+                                    "<td>" + emp.AdhaarNo + "</td>" +
+                                    "<td>" + emp.PAN_Number + "</td>" +
+                                    "<td>" + emp.DOB + "</td>" +
+                                    "<td>" +
+                                        "<button class='yes-btn' data-id='" + emp.EmpID + "'>Yes</button> " +
+                                        "<button class='no-btn' data-id='" + emp.EmpID + "'>No</button>" +
+                                    "</td>" +
+                                "</tr>"
+                            );
+                        });
+                    }
+                },
+                error: function(xhr, status, error) {
+                    console.log("Error:", error);
+                }
+            });
+        }
+    });
+
+    // Handle Yes Button Click
+    $(document).on("click", ".yes-btn", function() {
+        var empId = $(this).data("id");
+        var row = $(this).closest("tr"); // Get the row
+        $.ajax({
+          url: "/update-is-processed/",  // Django URL for updating
+          type: "POST",
+          data: { emp_id: empId },
+          headers: { "X-CSRFToken": "{{ csrf_token }}" },  // CSRF Token Required
+          success: function(response) {
+              if (response.status === "success") {
+                  alert("Employee ID: " + empId + " marked as processed!");
+                  row.remove(); //Remove row from table
+              } else {
+                  alert("Error: " + response.message);
+              }
+          },
+          error: function(xhr, status, error) {
+              alert("AJAX Error: " + error);
+          }
+      });
+        // Yahan aap AJAX call bhi kar sakte hain agar Yes ka action API me bhejna ho
+    });
+
+    // Handle No Button Click
+    $(document).on("click", ".no-btn", function() {
+        var empId = $(this).data("id");
+        alert("You clicked No for Employee ID: " + empId);
+        // Yahan bhi API request bhejna ho to add kar sakte hain
+    });
+
+});
+</script> {% endcomment %}
+
+</body>
+</html>
