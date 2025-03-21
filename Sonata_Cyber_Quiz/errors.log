@@ -1,0 +1,145 @@
+Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\asgiref\local.py", line 89, in _lock_storage
+    asyncio.get_running_loop()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\connection.py", line 58, in __getitem__
+    return getattr(self._connections, alias)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\asgiref\local.py", line 118, in __getattr__
+    return getattr(storage, key)
+AttributeError: '_thread._local' object has no attribute 'second_db'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 48, in home
+    with connections['second_db'].cursor() as cursor:
+         ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\connection.py", line 61, in __getitem__
+    raise self.exception_class(f"The connection '{alias}' doesn't exist.")
+django.utils.connection.ConnectionDoesNotExist: The connection 'second_db' doesn't exist.
+"POST / HTTP/1.1" 500 1427
+Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\asgiref\local.py", line 89, in _lock_storage
+    asyncio.get_running_loop()
+    ~~~~~~~~~~~~~~~~~~~~~~~~^^
+RuntimeError: no running event loop
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\connection.py", line 58, in __getitem__
+    return getattr(self._connections, alias)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\asgiref\local.py", line 118, in __getattr__
+    return getattr(storage, key)
+AttributeError: '_thread._local' object has no attribute 'second_db'
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 48, in home
+    with connections['second_db'].cursor() as cursor:
+         ~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\connection.py", line 61, in __getitem__
+    raise self.exception_class(f"The connection '{alias}' doesn't exist.")
+django.utils.connection.ConnectionDoesNotExist: The connection 'second_db' doesn't exist.
+"POST / HTTP/1.1" 500 1427
+Internal Server Error: /get-emp-images/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 137, in get_emp_images
+    emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 652, in get
+    raise self.model.MultipleObjectsReturned(
+    ...<5 lines>...
+    )
+Quiz.models.SonataUsersKYCData.MultipleObjectsReturned: get() returned more than one SonataUsersKYCData -- it returned 2!
+"GET /get-emp-images/?empid=18203 HTTP/1.1" 500 1427
+Internal Server Error: /get-emp-images/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 137, in get_emp_images
+    emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 652, in get
+    raise self.model.MultipleObjectsReturned(
+    ...<5 lines>...
+    )
+Quiz.models.SonataUsersKYCData.MultipleObjectsReturned: get() returned more than one SonataUsersKYCData -- it returned 2!
+"GET /get-emp-images/?empid=18203 HTTP/1.1" 500 1427
+Internal Server Error: /get-emp-images/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 137, in get_emp_images
+    emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 652, in get
+    raise self.model.MultipleObjectsReturned(
+    ...<5 lines>...
+    )
+Quiz.models.SonataUsersKYCData.MultipleObjectsReturned: get() returned more than one SonataUsersKYCData -- it returned 2!
+"GET /get-emp-images/?empid=18203 HTTP/1.1" 500 1427
+Internal Server Error: /get-emp-images/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 137, in get_emp_images
+    emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 652, in get
+    raise self.model.MultipleObjectsReturned(
+    ...<5 lines>...
+    )
+Quiz.models.SonataUsersKYCData.MultipleObjectsReturned: get() returned more than one SonataUsersKYCData -- it returned 2!
+"GET /get-emp-images/?empid=18203 HTTP/1.1" 500 1427
+Internal Server Error: /get-emp-images/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\New folder (3)\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 137, in get_emp_images
+    emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\models\query.py", line 652, in get
+    raise self.model.MultipleObjectsReturned(
+    ...<5 lines>...
+    )
+Quiz.models.SonataUsersKYCData.MultipleObjectsReturned: get() returned more than one SonataUsersKYCData -- it returned 2!
+"GET /get-emp-images/?empid=18203 HTTP/1.1" 500 1427

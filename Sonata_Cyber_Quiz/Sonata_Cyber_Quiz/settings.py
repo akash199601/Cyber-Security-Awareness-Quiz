@@ -129,7 +129,7 @@ DATABASES = {
             "driver": "ODBC Driver 17 for SQL Server",
         },
     },
-    "employee_master": {
+    "second_db": {
         "ENGINE": "mssql",
         "NAME": "HR",
         "USER": "SFPL_HR",
