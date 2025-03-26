@@ -466,11 +466,11 @@
                             <form method="post" action="{% url 'verify_document' %}" class="verify-form">
                                 {% csrf_token %}
                                 <input type="hidden" name="emp_id" value="">
-                                <input type="hidden" name="doc_type" value="aadhaar_front">
+                                <input type="hidden" name="doc_type" value="passport_photo">
                                 <input type="hidden" name="action" value="verify">
                                 <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
                             </form>
-                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_front">No</button>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="passport_photo">No</button>
                         </div>
                     </div>
                 
