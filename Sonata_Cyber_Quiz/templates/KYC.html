@@ -455,97 +455,95 @@
                     </tbody>
                 </table>
                 <div class="documents-container" style="display: flex; flex-wrap: wrap; width: 48%;">
-                        <div class="document-box">
-                            <img id="AadharProfileImage" src="photo.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Photo ID')" style="height: 70px;">
-                            <figcaption>Aadhar Image</figcaption>
-                        </div>
-
-                        <div class="document-box">
-                            <img id="photoImage" src="aadhar_front.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Front')" style="height: 70px;">
-                            <figcaption>Passport Photo</figcaption>
-                            <div class="verify-btn">
-                                <form method="post" action="{% url 'verify_document' %}" class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="aadhaar_front">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_front">No</button>
-                            </div>
-                        </div>
-                    
-                        <div class="document-box">
-                            <img id="aadharFrontImage" src="aadhar_front.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Front')" style="height: 70px;">
-                            <figcaption>Aadhar Front</figcaption>
-                            <div class="verify-btn">
-                                <form method="post" action="{% url 'verify_document' %}" class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="aadhaar_front">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_front">No</button>
-                            </div>
-                        </div>
-
-                        <div class="document-box">
-                            <img id="aadharBackImage" src="aadhar_back.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Back')" style="height: 70px;">
-                            <figcaption>Aadhar Back</figcaption>
-                            <div class="verify-btn">
-                                <form method="post" action="{% url 'verify_document' %}" class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="aadhaar_back">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_back">No</button>
-                            </div>                   
-                        </div>
-                        <div class="document-box">
-                            <img id="panImage" src="pan.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'PAN Card')" style="height: 70px;">
-                            <figcaption>PAN Card</figcaption>
-                            <div class="verify-btn">
-                                <form method="post" action="{% url 'verify_document' %}" class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="PAN_Img">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="PAN_Img">No</button>
-                            </div>                   
-                        </div>
-                        <div class="document-box">
-                            <img id="dlImage" src="dl.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'DL')" style="height: 70px;">
-                            <figcaption>DL</figcaption>
-                            <div class="verify-btn">
-                                <form method="post" action="{% url 'verify_document' %}"  class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="DL_Img">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="DL_Img">No</button>
-                            </div>                    
-                        </div>
-                        <div class="document-box">
-                            <img id="passbookImage" src="passbook.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Passbook')" style="height: 70px;">
-                            <figcaption>Bank Passbook</figcaption>
-                            <div class="verify-btn">
+                    <div class="document-box">
+                        <img id="AadharProfileImage" src="aadharImage.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Image')" style="height: 70px;">
+                        <figcaption>Aadhar Image</figcaption>
+                    </div>
+                    <div class="document-box">
+                        <img id="photoImage" src="photo.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Photo ID')" style="height: 70px;">
+                        <figcaption>Passport Photo</figcaption>
+                        <div class="verify-btn">
                             <form method="post" action="{% url 'verify_document' %}" class="verify-form">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="emp_id" value="">
-                                    <input type="hidden" name="doc_type" value="Passbook_Img">
-                                    <input type="hidden" name="action" value="verify">
-                                    <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
-                                </form>
-                                <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="Passbook_Img">No</button>
-                            </div>                   
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="aadhaar_front">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_front">No</button>
                         </div>
+                    </div>
+                
+                    <div class="document-box">
+                        <img id="aadharFrontImage" src="aadhar_front.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Front')" style="height: 70px;">
+                        <figcaption>Aadhar Front</figcaption>
+                        <div class="verify-btn">
+                            <form method="post" action="{% url 'verify_document' %}" class="verify-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="aadhaar_front">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_front">No</button>
+                        </div>
+                    </div>
+                    <div class="document-box">
+                        <img id="aadharBackImage" src="aadhar_back.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Aadhar Back')" style="height: 70px;">
+                        <figcaption>Aadhar Back</figcaption>
+                        <div class="verify-btn">
+                            <form method="post" action="{% url 'verify_document' %}" class="verify-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="aadhaar_back">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="aadhaar_back">No</button>
+                        </div>                   
+                    </div>
+                    <div class="document-box">
+                        <img id="panImage" src="pan.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'PAN Card')" style="height: 70px;">
+                        <figcaption>PAN Card</figcaption>
+                        <div class="verify-btn">
+                            <form method="post" action="{% url 'verify_document' %}" class="verify-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="PAN_Img">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="PAN_Img">No</button>
+                        </div>                   
+                    </div>
+                    <div class="document-box">
+                        <img id="dlImage" src="dl.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'DL')" style="height: 70px;">
+                        <figcaption>DL</figcaption>
+                        <div class="verify-btn">
+                            <form method="post" action="{% url 'verify_document' %}"  class="verify-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="DL_Img">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="DL_Img">No</button>
+                        </div>                    
+                    </div>
+                    <div class="document-box">
+                        <img id="passbookImage" src="passbook.jpg" onerror="this.onerror=null; this.src='{% static 'image.png' %}';" onclick="zoomImage(this, 'Passbook')" style="height: 70px;">
+                        <figcaption>Bank Passbook</figcaption>
+                        <div class="verify-btn">
+                        <form method="post" action="{% url 'verify_document' %}" class="verify-form">
+                                {% csrf_token %}
+                                <input type="hidden" name="emp_id" value="">
+                                <input type="hidden" name="doc_type" value="Passbook_Img">
+                                <input type="hidden" name="action" value="verify">
+                                <button type="submit" class="yes-btn highlight-btn" style="height: 30px;">Yes</button>
+                            </form>
+                            <button type="button" class="no-btn highlight-btn" style="height: 30px;" data-doc-type="Passbook_Img">No</button>
+                        </div>                   
+                    </div>
                    
                 </div>
             </div>
