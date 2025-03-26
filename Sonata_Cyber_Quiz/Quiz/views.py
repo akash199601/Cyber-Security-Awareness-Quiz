@@ -442,13 +442,14 @@ def reports_view(request):
 
 from django.utils.timezone import make_aware
 import datetime
+import pytz  # Optional if you want to specify a timezone
 
 def download_reports(request):
     if 'employee_id' not in request.session:
         return redirect('home')
 
     employee_id = request.session.get('employee_id')
-
+    print('report employee_id:', employee_id)
     try:
         # ✅ Query Parameters
         report_type = request.GET.get("type")  # 'completed' or 'non_completed'
@@ -456,22 +457,25 @@ def download_reports(request):
         end_date = request.GET.get("end")      # Format: 'YYYY-MM-DD'
 
         # ✅ Convert Dates to UTC Timezone
-        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
-        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
-
+        # start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
+        # end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
+        tz = pytz.UTC  # Define the timezone, e.g., UTC
+        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"), timezone=tz)
+        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d"), timezone=tz) + datetime.timedelta(days=1)
         # ✅ Filtering Queryset
         filter_kwargs = {
             "IsProcessed": 1 if report_type == "completed" else 0,
-            "RecievedDate__gte": start_date,
-            "RecievedDate__lt": end_date,
+            "Verified_Date__gte": start_date,
+            "Verified_Date__lt": end_date,
             "StageID": 11,
             "FinalVerified_by": employee_id
         }
-
+        print('filter_kwargs:', filter_kwargs)
         queryset = SonataUsersKYCData.objects.filter(**filter_kwargs).values(
             "EmpID", "MobileNo", "AdhaarNo", "PAN_Number", "IsActive", "IsProcessed", "Photo", "AdhaarFrontImg",
             "AdhaarBackImg", "PAN_Img", "DL_Img", "Passbook_Img"
         )
+        print('reports queryset:', queryset)
 
         if not queryset.exists():
             return HttpResponse("No data found for the selected criteria.", status=404)
@@ -569,20 +573,21 @@ def download_excel_reports(request):
         end_date = request.GET.get("end")      # e.g., '2025-03-19'
 
         # ✅ Convert Dates to Timezone Aware UTC
-        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
-        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
+        tz = pytz.UTC  # Define the timezone, e.g., UTC
+        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"), timezone=tz)
+        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d"), timezone=tz) + datetime.timedelta(days=1)
 
         # ✅ Selecting Only Required Columns
-        selected_columns = ['EmpID','DOB','MobileNo', 'AdhaarNo', 'PAN_Number','IsActive','IsProcessed']
+        selected_columns = ['EmpID','DOB','MobileNo', 'AdhaarNo', 'PAN_Number','IsActive','IsProcessed', 'RecievedDate','Verified_Date']
 
         # ✅ Filtering Data Based on IsProcessed
         if report_type == "completed":
             queryset = SonataUsersKYCData.objects.filter(
-                IsProcessed=1, RecievedDate__gte=start_date, RecievedDate__lt=end_date, FinalVerified_by=employee_id
+                IsProcessed=1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
             ).values(*selected_columns)
         else:
             queryset = SonataUsersKYCData.objects.filter(
-                IsProcessed=-1, RecievedDate__gte=start_date, RecievedDate__lt=end_date, FinalVerified_by=employee_id
+                IsProcessed=-1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
             ).values(*selected_columns)
  
             
