@@ -142,7 +142,7 @@ class UnitMaster(models.Model):
     
 class SonataUsersKYCData(models.Model):
     StageID = models.IntegerField()
-    EmpID = models.CharField(max_length=50, unique=True)
+    EmpID = models.BigIntegerField(unique=True)
     DOB = models.DateField(null=True,blank=True)
     Photo = models.BinaryField(null=True,blank=True)
     MobileNo = models.CharField(max_length=15)
@@ -155,7 +155,62 @@ class SonataUsersKYCData(models.Model):
     Passbook_Img = models.BinaryField(null=True, blank=True)
     RecievedDate = models.DateTimeField(auto_now_add=True)
     IsActive = models.BooleanField(default=True)
-    IsProcessed = models.BooleanField(default=False)
+    IsProcessed = models.IntegerField(default=0)
+    FinalVerified_by = models.IntegerField(null=True, blank=True)
+    Verified_Date = models.DateTimeField(auto_now_add=True)
     class Meta:
         db_table = "Tbl_Sonata_Users_KYC_Data"
+        managed = False
+        
+
+       
+       
+class RegionAllotment(models.Model):
+    id = models.AutoField(primary_key=True)
+    staffid = models.IntegerField(null=True, blank=True)
+    regionid = models.SmallIntegerField(null=True, blank=True)
+
+    class Meta:
+        db_table = 'regionAllotment'    
+        managed = False
+ 
+ 
+class SonataUsersKYCTransactionData(models.Model):
+    RefID = models.IntegerField(null=True, blank=True)
+    EmpID = models.IntegerField(null=True, blank=True)
+    StageID = models.IntegerField(null=True, blank=True)
+    IsVerified = models.IntegerField(null=True, blank=True)
+    Remark = models.CharField(max_length=255, null=True, blank=True)
+    Date = models.DateField(null=True, blank=True)
+    Stage = models.IntegerField(null=True, blank=True)
+    Verified_by = models.IntegerField(null=True, blank=True)
+    class Meta:
+        db_table = "Tbl_Sonata_Users_KYC_Transaction_Data"
+        managed = False
+        
+        
+class TblSonataUsersKYCDataSignDesk(models.Model):
+    EmpID = models.BigIntegerField(null=True, blank=True)
+    FullName = models.CharField(max_length=255)
+    AadharNo = models.CharField(max_length=12, unique=True)
+    DOB = models.DateField()
+    Gender = models.CharField(max_length=10)
+    Country = models.CharField(max_length=100)
+    District = models.CharField(max_length=100)
+    State = models.CharField(max_length=100)
+    PO = models.CharField(max_length=255, null=True, blank=True)
+    Loc = models.CharField(max_length=255, null=True, blank=True)
+    Vtc = models.CharField(max_length=255, null=True, blank=True)
+    Street = models.CharField(max_length=255, null=True, blank=True)
+    House = models.CharField(max_length=255, null=True, blank=True)
+    Landmark = models.CharField(max_length=255, null=True, blank=True)
+    ZIP = models.CharField(max_length=10)
+    ProfileImage = models.BinaryField(null=True, blank=True)
+    Care_Of = models.CharField(max_length=255, null=True, blank=True)
+    Status = models.CharField(max_length=255, null=True, blank=True)
+    reference_id = models.TextField(null=True, blank=True)
+    uniqueness_id = models.TextField(null=True, blank=True)
+
+    class Meta:
+        db_table = "Tbl_Sonata_Users_KYC_Data_SignDesk"
         managed = False

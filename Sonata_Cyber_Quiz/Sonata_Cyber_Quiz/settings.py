@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-p4&khk1uc&=anf&$#yxm_9an6ug4p$&)^7a9^gx=xfa^ka(w!b'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['192.168.18.80','127.0.0.1']
 
@@ -69,6 +69,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'Sonata_Cyber_Quiz.middleware.NoCacheMiddleware',
 ]
 
 ROOT_URLCONF = 'Sonata_Cyber_Quiz.urls'

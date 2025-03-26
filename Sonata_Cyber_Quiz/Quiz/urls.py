@@ -8,16 +8,17 @@ handler500 = 'Quiz.views.custom_500'
 urlpatterns = [
     path('', views.home, name='home'),
     path('HR_dashboard/', views.HR_dashboard, name='HR_dashboard'),
-    path('get-regions/', views.get_regions, name='get_regions'),
-    path('get-units/', views.get_units, name='get_units'), 
-    path('get-emp/', views.get_emp, name='get_emp'), 
-    path('get_completed_employees/', views.get_completed_employees, name='get_completed_employees'), 
-    path("update-is-processed/", views.update_is_processed, name="update-is-processed"),
     path("reports/", views.reports_view, name="reports"),
     path("download-reports/", views.download_reports, name="download_reports"),
+    path("download-excel-reports/", views.download_excel_reports, name="download_excel_reports"),
     path('get-emp-images/', views.get_emp_images, name='get_emp_images'),
     path('run-sp/', views.run_stored_procedure, name='run_stored_procedure'),
-    # path('Logout/',views.Logout,name="Logout"),
+    path("verify-document/", views.verify_document, name="verify_document"),
+    path('logout/', views.user_logout, name='logout'),
+    path('final-submission/', views.final_submission, name='final_submission'),
+    
+    
+    
     
     # path('candidate/', views.candidate_details, name='candidate_details'),
     path('quiz_section/', views.quiz_section, name='quiz_section'),  # Section selection page

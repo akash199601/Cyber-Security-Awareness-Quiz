@@ -4,14 +4,24 @@ from pyexpat.errors import messages
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, render, redirect
 from .forms import CandidateForm, CheckStatusForm, QuizForm
-from .models import Division, EmployeeMaster,LoginStatus , Option, Question, Candidate, QuizResult, RegionMaster, SonataUsersKYCData, UnitMaster
+from .models import Division, EmployeeMaster,LoginStatus , Option, Question, Candidate, QuizResult, RegionMaster, SonataUsersKYCData, SonataUsersKYCTransactionData, UnitMaster
 from django.utils import timezone
-from datetime import timedelta
+from datetime import date, timedelta
 from django.db import connection, connections
 # from .models import *
 import pandas as pd
 from django.http import HttpResponse
 from django.shortcuts import render
+from django.views.decorators.csrf import csrf_exempt
+import io
+import zipfile
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
+from reportlab.lib.utils import ImageReader
+from django.utils.timezone import make_aware
+import datetime
+from PIL import Image
 
 def custom_404(request, exception):
     return render(request, '404.html', status=404)
@@ -27,23 +37,6 @@ def home(request):
             employee_id = form.cleaned_data['employee_id']
             password = form.cleaned_data['password']
             
-            # # Get the login status for this employee_id
-            # login_status, created = LoginStatus.objects.get_or_create(employee_id=employee_id)
-
-            # # Check if the user is blocked
-            # if login_status.status == 'blocked':
-            #     # Check if the blocking duration has passed (24 hours)
-            #     if timezone.now() - login_status.blocked_at > timedelta(hours=24):
-            #         # Unblock the user after 24 hours
-            #         login_status.status = 'active'
-            #         login_status.failed_attempts = 0
-            #         login_status.blocked_at = None
-            #         login_status.save()
-            #     else:
-            #         # If still blocked, return an error message
-            #         error = "Your account is blocked. Please try again after 24 hours."
-            #         return render(request, 'home.html', {'form': form, 'error': error})
-
             # Query to match employee_id and password
             with connections['second_db'].cursor() as cursor:
                 cursor.execute("""
@@ -68,29 +61,10 @@ def home(request):
                         employee_id=empId
                     )
                     request.session['candidate_id'] = candidate.id
+                    request.session['employee_id'] = empId  # Store employee_id in session
+                    request.session['name'] = full_name
                     
-                    # Reset failed attempts on successful login
-                    # login_status.failed_attempts = 0
-                    # login_status.status = 'active'
-                    # login_status.save()
-                    
-                    # return redirect('start_quiz')
-                    return redirect('HR_dashboard')
-                # else:
-                #     # Increment the failed attempts count
-                #     login_status.failed_attempts += 1
-                    
-                #     # Check if failed attempts exceed the limit
-                #     if login_status.failed_attempts >= 3:
-                #         login_status.status = 'blocked'
-                #         login_status.blocked_at = timezone.now()  # Record when the user is blocked
-                #         error = "Your account has been blocked due to too many failed login attempts."
-                #     else:
-                #         error = "Invalid Employee ID or Password. Please try again."
-                    
-                #     # Save the login status
-                #     login_status.save()
-                    
+                    return redirect('HR_dashboard')                    
             # Render home with error message
             return render(request, 'home.html', {'form': form})
 
@@ -98,62 +72,190 @@ def home(request):
         form = CandidateForm()
     return render(request, 'home.html', {'form': form})
 
-def get_regions(request):
-    divisional_id = request.GET.get('divisionalid')
-    regions = list(RegionMaster.objects.using('second_db').filter(divisionalid=divisional_id).values('regionid', 'regionname'))
-    print('regions-----------',regions)
-    return JsonResponse({'regions': regions})
+from django.contrib.auth import logout
+from django.db.models import Q  # Import Q for complex queries
 
-def get_units(request):
-    region_id = request.GET.get('regionid')
-    units = list(UnitMaster.objects.using('second_db').filter(regionid=region_id).values('unitid', 'unitname'))
-    print('units-----------',units)
-    return JsonResponse({'units': units})
+def user_logout(request):
+    logout(request)
+    request.session.flush()  # Clear the session
+    return redirect('home')
 
-def get_emp(request):
-    unit_id = request.GET.get('unitid')
-    print('unitid:', unit_id)  # Debugging
-
-    if unit_id:
-        employees = list(EmployeeMaster.objects.using('second_db').filter(UnitID=unit_id).values_list('employee_id', flat=True))
+# For search bar
+def employee_kyc_view(request):
+    search_query = request.GET.get('search', '')
+    if search_query:
+        employees = SonataUsersKYCData.objects.filter(Q(EmpID__icontains=search_query) | Q(MobileNo__icontains=search_query) | Q(AdhaarNo__icontains=search_query) | Q(PAN_Number__icontains=search_query) | Q(DOB_icontains = search_query)) # Search query
     else:
-        employees = list(EmployeeMaster.objects.using('second_db').values_list('employee_id', flat=True))
+        employees = SonataUsersKYCData.objects.all()  # Get all employees if no search query
+        return render(request, 'KYC.html', {'employee_details': employees})
+    
+def HR_dashboard(request):
+    # Retrieve the HR's employee ID from the session
+    hr_employee_id = request.session.get('employee_id')
 
-    # Fetch only basic employee details (No images)
-    employee_details = list(SonataUsersKYCData.objects.filter(EmpID__in=employees, IsProcessed=0,IsActive=1).values(
-        'EmpID', 'DOB', 'MobileNo', 'AdhaarNo', 'PAN_Number'
-    ))
+    if not hr_employee_id:
+        return redirect('home')
 
-    return JsonResponse({'employee_details': employee_details}, safe=False)
+    hr_employee  = Candidate.objects.get(employee_id=hr_employee_id)
+    
+    with connections['default'].cursor() as cursor:
+        cursor.execute("""
+            Select u.unitname from EmployeeMaster e
+            left join unitmaster u on u.unitid = e.UnitID
+            where employee_id = %s
+        """, [hr_employee_id])
+        result = cursor.fetchall()
+        employee_unitname = [row[0] for row in result]
+    # Fetch all region IDs and UnitIDs for the logged-in HR in a single query
+    with connections['second_db'].cursor() as cursor:
+        cursor.execute("""
+            SELECT ra.regionid, um.unitid
+            FROM regionAllotment ra
+            JOIN unitmaster um ON ra.regionid = um.regionid
+            WHERE ra.staffid = %s
+        """, [hr_employee_id])
+        result = cursor.fetchall()
+        region_ids = [row[0] for row in result]
+        unit_ids = [row[1] for row in result]
+
+    if not region_ids or not unit_ids:
+        return JsonResponse({'error': 'Region IDs or Unit IDs not found for the logged-in HR'}, status=400)
+
+    # Format unit_ids for the SQL query
+    unit_ids_str = ','.join(str(unit_id) for unit_id in unit_ids)
+
+    # Fetch employee data for the logged-in HR's units
+    query = f"""
+        SELECT a.employee_id, kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
+        FROM [EmployeeMaster] a
+        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+        JOIN unitmaster u ON u.unitid = a.UnitID
+        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+        LEFT JOIN Zone z ON z.id = d.zoneID
+        WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = 0
+    """
+
+    # Fetch completed employee data for the logged-in HR's units
+    completed_query = f"""
+        SELECT a.employee_id,kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
+        FROM [EmployeeMaster] a
+        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+        JOIN unitmaster u ON u.unitid = a.UnitID
+        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+        LEFT JOIN Zone z ON z.id = d.zoneID
+        WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = 1
+    """
+
+    rejected_query = f"""
+        SELECT a.employee_id,kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
+        FROM [EmployeeMaster] a
+        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+        JOIN unitmaster u ON u.unitid = a.UnitID
+        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+        LEFT JOIN Zone z ON z.id = d.zoneID
+        WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = -1
+    """
+    
+    with connections['default'].cursor() as cursor:
+        cursor.execute(query)
+        employee_data = cursor.fetchall()
+
+        # Fetch completed employee data
+        cursor.execute(completed_query)
+        completed_employee_data = cursor.fetchall()
+        
+        cursor.execute(rejected_query)
+        reject_employee_data = cursor.fetchall()
+
+        if cursor.description:
+            columns = [col[0] for col in cursor.description]  # Extract column names
+            df = pd.DataFrame(employee_data, columns=columns)  # Convert to DataFrame
+            employee_details = df.to_dict(orient='records')  # Convert to list of dictionaries
+            
+            # Convert completed employee data to DataFrame and then to list of dictionaries
+            completed_df = pd.DataFrame(completed_employee_data, columns=columns)
+            completed_employee_details = completed_df.to_dict(orient='records')
+            
+            reject_df = pd.DataFrame(reject_employee_data, columns=columns)
+            reject_employee_details = reject_df.to_dict(orient='records')
+
+        else:
+            employee_details = []  # If no data is fetched, return an empty list
+            completed_employee_details = []  # If no data is fetched, return an empty list
+
+    return render(request, 'KYC.html', {'employee_details': employee_details, 'completed_employee_details': completed_employee_details,'reject_employee_details': reject_employee_details,'hr_employee': hr_employee,'hr_employee_id': hr_employee_id,'employee_unitname': employee_unitname})
+
+
 
 def get_emp_images(request):
     emp_id = request.GET.get('empid')
-    print('emp_id',emp_id)
-    
+    print('emp_id:', emp_id)
+
     if not emp_id:
         return JsonResponse({'error': 'EmpID is required'}, status=400)
 
-    try:
-        emp = SonataUsersKYCData.objects.get(EmpID=emp_id, IsProcessed=0,IsActive = 1)
-        print('emp--------',emp)
-        print("Fetching images for EmpID:", emp_id)
-        # print("Aadhaar Front:", emp.AdhaarFrontImg is not None)
-        # print("Aadhaar Back:", emp.AdhaarBackImg is not None)
-        # print("PAN Image:", emp.PAN_Img is not None)
-        
-        images = {
-            'AdhaarFrontImg': convert_binary_to_base64(emp.AdhaarFrontImg),
-            'AdhaarBackImg': convert_binary_to_base64(emp.AdhaarBackImg),
-            'PAN_Img': convert_binary_to_base64(emp.PAN_Img),
-            'Photo': convert_binary_to_base64(emp.Photo),
-        }
-        
-        print(f"✅ Images found for EmpID {emp_id}: {images}")  # Debugging output
+    query = """
+        SELECT z.Zone, d.Divisionname, r.regionname, u.unitname,a.employee_id, first_name, surname, EmpDOB, kyc.MobileNo, 
+        a.DOJ, PanNo, kyc.*, signdesk.FullName, signdesk.AadharNo, signdesk.DOB,signdesk.Care_Of,signdesk.District,signdesk.House,signdesk.ProfileImage
+        FROM EmployeeMaster a
+        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+        JOIN unitmaster u ON u.unitid = a.UnitID
+        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+        LEFT JOIN Zone z ON z.id = d.zoneID
+        LEFT JOIN Tbl_Sonata_Users_KYC_Data_SignDesk signdesk ON signdesk.EmpID = a.employee_id
+        WHERE kyc.IsActive = 1 AND kyc.IsProcessed = 0 AND kyc.EmpID = %s;
+    """
 
-    except SonataUsersKYCData.DoesNotExist:
-        images = {'error': 'Employee not found'}
+    with connection.cursor() as cursor:
+        cursor.execute(query, [emp_id])
+        row = cursor.fetchone()
 
-    return JsonResponse(images)
+    if not row:
+        print('-------3')
+        return JsonResponse({'error': 'Employee not found'}, status=404)
+
+    # Extracting required fields
+    data = {
+        'Zone': row[0],
+        'DivisionName': row[1],
+        'RegionName': row[2],
+        'UnitName': row[3],
+        'StaffID': row[4],  # Employee ID
+        'first_name': row[5],
+        'surname': row[6],
+        'EmpDOB': row[7],
+        'EmpMobileNo': row[8],
+        'DOJ': row[9],
+        'EmpPanNo': row[10],
+        'EmpID': row[13],
+        'DOB': row[14],
+        'Photo': convert_binary_to_base64(row[15]),
+        'MobileNo': row[16],
+        'AdhaarNo': row[17],
+        'PAN_Number': row[18],
+        'AdhaarFrontImg': convert_binary_to_base64(row[19]),
+        'AdhaarBackImg': convert_binary_to_base64(row[20]),
+        'PAN_Img': convert_binary_to_base64(row[21]),
+        'DL_Img': convert_binary_to_base64(row[22]),
+        'Passbook_Img': convert_binary_to_base64(row[23]),
+        'FullName_Signdesk': row[29],
+        'AadharNo_Signdesk': row[30],
+        'DOB_Signdesk': row[31],
+        'Care_of': row[32],
+        'District': row[33],
+        'House': row[34],
+        'ProfileImage': convert_binary_to_base64(row[35]),
+
+    }
+
+    print(f"✅ Data fetched for EmpID {emp_id}: {data}")
+
+    return JsonResponse(data)
+
 
 # 🔹 Function to Convert Binary to Base64
 def convert_binary_to_base64(binary_data):
@@ -162,58 +264,304 @@ def convert_binary_to_base64(binary_data):
     return None
 
 
-# def get_emp(request):
-#     unit_id = request.GET.get('unitid')
-#     print('unitiddddddddddddddddddddd',unit_id)  # Debugging
-    
-#     if unit_id:
-#         employees = list(EmployeeMaster.objects.using('second_db').filter(UnitID=unit_id).values_list('employee_id',flat=True))
-#         # print('employees-----------',employees)
-#         print('Employee IDs:', list(employees)) 
-#     else:
-#         print('No unitid provided, fetching all employees')
-#         employees = list(EmployeeMaster.objects.using('second_db').values_list('employee_id', flat=True))  # Fetch all employees if no filter
-        
-#         # print('Employee IDs:', list(employees))
-    
-#     employee_details = list(SonataUsersKYCData.objects.filter(EmpID__in=employees,IsProcessed=0).values('EmpID','DOB','MobileNo','AdhaarNo','PAN_Number'))  # Convert QuerySet to List
-#     # print('Filtered Employee Details:', employee_details)  # Debugging
-#     return JsonResponse({'employee_details': employee_details}, safe=False)
 
-def HR_dashboard(request):
-     
-    divisions = Division.objects.using('second_db').all()
-    # emp = SonataUsersKYCData.objects.all()
-    return render(request,'KYC.html', {'divisions': divisions})
 
-def get_completed_employees(request):
-    employees = list(SonataUsersKYCData.objects.filter(IsProcessed=1).values('EmpID', 'DOB', 'MobileNo', 'AdhaarNo', 'PAN_Number'))  
-    print('completed-emp-----',employees)
-    return JsonResponse({"employees": employees})
+@csrf_exempt
+def verify_document(request):
+    if request.method == "POST":
+        try:
+            emp_id = request.POST.get("emp_id")
+            doc_type = request.POST.get("doc_type")
+            action = request.POST.get("action")  # "verify" or "reject"
+            remark = request.POST.get("remark", "").strip()  # 📝 Remarks lein (default empty)
+            print(f"Received emp_id: {emp_id}")
+          
+            try:
+                emp_id = int(emp_id)  
+            except ValueError:
+                return JsonResponse({"status": "error", "message": "Invalid Employee ID!"}, status=400)
+            
+            if not emp_id or not doc_type or not action:
+                return JsonResponse({"status": "error", "message": "Missing required fields!"}, status=400)
 
-def update_is_processed(request):
+            print(f"Received emp_id: {emp_id}, doc_type: {doc_type}, action: {action}, remark: {remark}")
+            # Fetch the record from SonataUsersKYCData
+            try:
+                kyc_data = SonataUsersKYCData.objects.get(EmpID=emp_id)
+                print('kyc data:', kyc_data.EmpID)
+            except SonataUsersKYCData.DoesNotExist:
+                print('-------1')
+                return JsonResponse({"status": "error", "message": "Employee not found!"}, status=404)
+
+            # Map doc_type to StageID
+            stage_id_mapping = {
+                'DOB': 2,
+                'passport_photo': 3,
+                'MobileNo': 4,
+                'AdhaarNo': 5,
+                'PAN_Number': 6,
+                'aadhaar_front': 7,
+                'aadhaar_back': 8,
+                'PAN_Img': 9,
+                'DL_Img': 10,
+                'Passbook_Img': 11,
+            }
+
+            stage_id = stage_id_mapping.get(doc_type)
+
+            if not stage_id:
+                return JsonResponse({"status": "error", "message": "Invalid document type!"}, status=400)
+
+            # Determine verification status and stage
+            is_verified = 1 if action == "verify" else 0
+            stage = 20 if action == "verify" else -1
+            date = timezone.now()
+
+            # Get the logged-in HR's employee ID
+            hr_employee_id = request.session.get('employee_id')
+            # Check if transaction already exists
+            existing_transaction = SonataUsersKYCTransactionData.objects.filter(
+                RefID=kyc_data.id, StageID=stage_id
+            ).first()
+
+            if existing_transaction:
+                # Update existing record instead of inserting a new one
+                existing_transaction.IsVerified = is_verified
+                existing_transaction.Stage = stage
+                existing_transaction.Date = date
+                existing_transaction.Verified_by = hr_employee_id
+                if action == "reject":  
+                    existing_transaction.Remark = remark  # 📝 Remarks add karein
+                elif action == "verify":
+                    existing_transaction.Remark = ""  # Clear remarks if verified
+                existing_transaction.save()
+            else:
+                # Insert a new row into SonataUsersKYCTransactionData
+                SonataUsersKYCTransactionData.objects.update_or_create(
+                    RefID=kyc_data.id,  # Primary key from SonataUsersKYCData
+                    StageID=stage_id,
+                    
+                    EmpID=kyc_data.EmpID,
+                    IsVerified= is_verified,
+                    Date= date,
+                    Stage= stage,
+                    Remark= remark if action == "reject" else "", # 📝 Remarks set karein
+                    Verified_by = hr_employee_id
+                    
+                )
+
+            return JsonResponse({"status": "success", "message": "Document verification updated successfully!"})
+
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method!"}, status=400)
+
+
+
+@csrf_exempt
+def final_submission(request):
     if request.method == "POST":
         emp_id = request.POST.get("emp_id")
         
+        if not emp_id:
+            return JsonResponse({"status": "error", "message": "Employee ID is missing!"}, status=400)
+
+        print('final emp_id:', emp_id)  # Debugging: Log emp_id
         try:
-            emp = SonataUsersKYCData.objects.get(EmpID=emp_id)
-            emp.IsProcessed = 1  # Update column
-            emp.save()
-            return JsonResponse({"status": "success", "message": "Updated successfully!"})
+            # Fetch the employee's KYC data
+            kyc_data = SonataUsersKYCData.objects.get(EmpID=emp_id)
+
+            # Map doc_type to StageID
+            stage_id_mapping = {
+                'DOB': 2,
+                'passport_photo': 3,
+                'MobileNo': 4,
+                'AdhaarNo': 5,
+                'PAN_Number': 6,
+                'aadhaar_front': 7,
+                'aadhaar_back': 8,
+                'PAN_Img': 9,
+                'DL_Img': 10,
+                'Passbook_Img': 11,
+            }
+
+            # Fetch all StageIDs for the employee from SonataUsersKYCTransactionData
+            completed_stages = SonataUsersKYCTransactionData.objects.filter(
+                EmpID=emp_id
+            ).values_list('StageID','IsVerified')
+
+            completed_stage_dict = dict(completed_stages)
+            # Find pending stages
+            all_stages = set(stage_id_mapping.values())
+            completed_stages = set(completed_stages)
+            pending_stages = all_stages - set(completed_stage_dict.keys())
+
+           
+            if pending_stages:
+                # Map pending StageIDs back to doc_type names
+                pending_columns = [
+                    doc_type for doc_type, stage_id in stage_id_mapping.items() if stage_id in pending_stages
+                ]
+                return JsonResponse({
+                    "status": "error",
+                    "message": f"Pending verification for: {', '.join(pending_columns)}"
+                })
+
+            # If all stages are completed, update isProcessed
+            if any(is_verified == 0 for is_verified in completed_stage_dict.values()):  # If any stage is rejected
+                kyc_data.IsProcessed = -1  # Mark as rejected   
+            else:
+                kyc_data.IsProcessed = 1
+                
+            date = timezone.now()
+            # Get the logged-in HR's employee ID
+            hr_employee_id = request.session.get('employee_id')
+            kyc_data.FinalVerified_by = hr_employee_id
+            kyc_data.Verified_Date = date
+            kyc_data.save()
+
+            return JsonResponse({"status": "success", "message": "Final submission successful!"})
+
         except SonataUsersKYCData.DoesNotExist:
-            return JsonResponse({"status": "error", "message": "Employee not found!"})
-    
-    return JsonResponse({"status": "error", "message": "Invalid request!"})
+            return JsonResponse({"status": "error", "message": "Employee not found!"}, status=404)
+        except Exception as e:
+            return JsonResponse({"status": "error", "message": str(e)}, status=500)
+
+    return JsonResponse({"status": "error", "message": "Invalid request method!"}, status=400)
 
 
+@csrf_exempt
 def reports_view(request):
-    return render(request, "reports.html")  # ✅ Create this HTML file
+    if 'employee_id' not in request.session:
+        return redirect('home')
+    employee_id = request.session.get('employee_id')
+    today = date.today()
+    return render(request, "reports.html",{'employee_id': employee_id,"today_date": today})  # ✅ Create this HTML file
 
 
 from django.utils.timezone import make_aware
 import datetime
 
 def download_reports(request):
+    if 'employee_id' not in request.session:
+        return redirect('home')
+
+    employee_id = request.session.get('employee_id')
+
+    try:
+        # ✅ Query Parameters
+        report_type = request.GET.get("type")  # 'completed' or 'non_completed'
+        start_date = request.GET.get("start")  # Format: 'YYYY-MM-DD'
+        end_date = request.GET.get("end")      # Format: 'YYYY-MM-DD'
+
+        # ✅ Convert Dates to UTC Timezone
+        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
+        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
+
+        # ✅ Filtering Queryset
+        filter_kwargs = {
+            "IsProcessed": 1 if report_type == "completed" else 0,
+            "RecievedDate__gte": start_date,
+            "RecievedDate__lt": end_date,
+            "StageID": 11,
+            "FinalVerified_by": employee_id
+        }
+
+        queryset = SonataUsersKYCData.objects.filter(**filter_kwargs).values(
+            "EmpID", "MobileNo", "AdhaarNo", "PAN_Number", "IsActive", "IsProcessed", "Photo", "AdhaarFrontImg",
+            "AdhaarBackImg", "PAN_Img", "DL_Img", "Passbook_Img"
+        )
+
+        if not queryset.exists():
+            return HttpResponse("No data found for the selected criteria.", status=404)
+
+        # ✅ Convert Queryset to DataFrame
+        df = pd.DataFrame(list(queryset))
+
+        # ✅ Required Columns
+        required_columns = ["EmpID", "MobileNo", "Photo", "AdhaarNo", "PAN_Number", "IsActive", "IsProcessed",
+                            "AdhaarFrontImg", "AdhaarBackImg", "PAN_Img", "DL_Img", "Passbook_Img"]
+        df = df[[col for col in required_columns if col in df.columns]]  # Keep only existing columns
+
+        if df.empty:
+            return HttpResponse("No valid image data found.", status=404)
+
+        # ✅ Handle Duplicate Columns
+        df = df.loc[:, ~df.columns.duplicated()]
+
+        # ✅ Create ZIP Buffer
+        zip_buffer = io.BytesIO()
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+
+            # ✅ Generate PDFs for Each Employee
+            for _, row in df.iterrows():
+                emp_id = row.get('EmpID', 'Unknown')
+                pdf_buffer = io.BytesIO()
+                c = canvas.Canvas(pdf_buffer, pagesize=letter)
+
+                # ✅ Fixed Image Size
+                img_width = 400
+                img_height = 300
+
+                # ✅ Top Margin
+                top_margin = 150  # Page ke top se margin
+
+                # ✅ Adjusted Image Positions
+                y_positions = [600 - top_margin, 250 - top_margin]  # ✅ Shifted down by top_margin
+                image_count = 0  # Track images per page
+
+                for field in required_columns[2:]:  # Skip 'EmpID' and 'MobileNo'
+                    if field in row and row[field]:  # Check if field exists and is not empty
+                        try:
+                            image_data = io.BytesIO(row[field])  # Convert binary data to BytesIO
+                            
+                            # ✅ Open Image with PIL
+                            with Image.open(image_data) as img:
+                                img = img.convert("RGB")  # Convert to RGB mode
+                                img = img.resize((img_width, img_height))  # ✅ Resize to fixed 400x300
+
+                                # ✅ Save Resized Image to BytesIO
+                                resized_image_data = io.BytesIO()
+                                img.save(resized_image_data, format="JPEG")  
+                                resized_image_data.seek(0)
+
+                            image = ImageReader(resized_image_data)  # Convert to ImageReader
+
+                            # ✅ Draw Image on PDF
+                            c.drawImage(image, 100, y_positions[image_count], width=img_width, height=img_height)
+                            image_count += 1
+
+                            if image_count == 2:  # ✅ If 2 images added, create a new page
+                                c.showPage()
+                                image_count = 0  # Reset count
+                        except Exception as e:
+                            print(f"Error processing {field} for {emp_id}: {e}")
+
+                c.save()
+
+                # ✅ Save the PDF in ZIP File
+                pdf_buffer.seek(0)
+                zip_file.writestr(f"{emp_id}_documents.pdf", pdf_buffer.read())
+
+        # ✅ Prepare the Response with ZIP File
+        response = HttpResponse(content_type='application/zip')
+        response['Content-Disposition'] = 'attachment; filename="employee_images.zip"'
+
+        zip_buffer.seek(0)
+        response.write(zip_buffer.getvalue())
+
+        return response
+
+    except Exception as e:
+        return HttpResponse(f"Error: {str(e)}", status=500)
+
+
+def download_excel_reports(request):
+    if 'employee_id' not in request.session:
+        return redirect('home')
+
+    employee_id = request.session.get('employee_id')
     try:
         # ✅ Query Parameters from URL
         report_type = request.GET.get("type")  # 'completed' or 'non_completed'
@@ -224,33 +572,32 @@ def download_reports(request):
         start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
         end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
 
-        # ✅ Filtering Data Based on IsProcessed
-        filter_kwargs = {
-            "IsProcessed": 1 if report_type == "completed" else 0,
-            "RecievedDate__gte": start_date,
-            "RecievedDate__lt": end_date
-        }
+        # ✅ Selecting Only Required Columns
+        selected_columns = ['EmpID','DOB','MobileNo', 'AdhaarNo', 'PAN_Number','IsActive','IsProcessed']
 
-        queryset = SonataUsersKYCData.objects.filter(**filter_kwargs).values(
-            "EmpID", "MobileNo", "AdhaarNo", "PAN_Number", "IsActive", "IsProcessed"
-        )
+        # ✅ Filtering Data Based on IsProcessed
+        if report_type == "completed":
+            queryset = SonataUsersKYCData.objects.filter(
+                IsProcessed=1, RecievedDate__gte=start_date, RecievedDate__lt=end_date, FinalVerified_by=employee_id
+            ).values(*selected_columns)
+        else:
+            queryset = SonataUsersKYCData.objects.filter(
+                IsProcessed=-1, RecievedDate__gte=start_date, RecievedDate__lt=end_date, FinalVerified_by=employee_id
+            ).values(*selected_columns)
+ 
+            
+
+        # ✅ Debugging Print (Remove Later)
+        print(f"Total Records Found: {queryset.count()}")
 
         # ✅ Convert Queryset to DataFrame
         df = pd.DataFrame(list(queryset))
-
-        # ✅ Ensure only required columns are present
-        required_columns = ["EmpID", "MobileNo", "AdhaarNo", "PAN_Number", "IsActive", "IsProcessed"]
-        df = df[required_columns]  # Drop any extra columns if present
-
-        # ✅ Timezone Issue Fix - Remove Timezone from Datetime Fields
-        if "RecievedDate" in df.columns:
-            df["RecievedDate"] = df["RecievedDate"].dt.tz_localize(None)
 
         # ✅ Response as Excel File
         response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         response["Content-Disposition"] = f'attachment; filename="{report_type}_KYC_Report.xlsx"'
 
-        # ✅ Save to Excel
+        # ✅ Save to Excel (Only Required Columns)
         df.to_excel(response, index=False)
 
         return response
@@ -267,53 +614,6 @@ def run_stored_procedure(request):
         except Exception as e:
             print(f"❌ Error executing SP: {str(e)}")  # Error logging
     return HttpResponse(status=204) 
-
-# def Logout(request):
-#     Logout(request)
-#     return redirect('/')
-
-# def download_reports(request):
-#     try:
-#         # ✅ Query Parameters from URL
-#         report_type = request.GET.get("type")  # 'completed' ya 'non_completed'
-#         start_date = request.GET.get("start")  # e.g., '2025-03-18'
-#         end_date = request.GET.get("end")      # e.g., '2025-03-19'
-
-#         # ✅ Convert Dates to Timezone Aware UTC
-#         start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
-#         end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
-
-#         # ✅ Filtering Data Based on IsProcessed
-#         if report_type == "completed":
-#             queryset = SonataUsersKYCData.objects.filter(IsProcessed=1, RecievedDate__gte=start_date, RecievedDate__lt=end_date).values('EmpID','MobileNo','AdhaarNo','PAN_Number','IsActive','IsProcessed')
-#         else:
-#             queryset = SonataUsersKYCData.objects.filter(IsProcessed=0, RecievedDate__gte=start_date, RecievedDate__lt=end_date).values('EmpID','MobileNo','AdhaarNo','PAN_Number','IsActive','IsProcessed')
-
-#         # ✅ Debugging Print (Remove Later)
-#         print(f"Total Records Found: {queryset.count()}")
-        
-#         # ✅ Convert Queryset to DataFrame
-#         df = pd.DataFrame(list(queryset.values()))
-        
-#         # ✅ Timezone Issue Fix - Remove Timezone from Datetime Fields
-#         if not df.empty:
-#             df["RecievedDate"] = df["RecievedDate"].dt.tz_localize(None)
-
-#         # ✅ Response as Excel File
-#         response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-#         response["Content-Disposition"] = f'attachment; filename="{report_type}_KYC_Report.xlsx"'
-
-#         # ✅ Save to Excel
-#         df.to_excel(response, index=False)
-
-#         return response
-    
-#     except Exception as e:
-#         return HttpResponse(f"Error: {str(e)}", status=500)
-
-
-
-
 
 
 
