@@ -16,7 +16,7 @@ urlpatterns = [
     path("verify-document/", views.verify_document, name="verify_document"),
     path('logout/', views.user_logout, name='logout'),
     path('final-submission/', views.final_submission, name='final_submission'),
-    
+    path('get_verification_status/', views.get_verification_status, name='get_verification_status'),
     
     
     

@@ -123,8 +123,19 @@ def HR_dashboard(request):
 
     # Format unit_ids for the SQL query
     unit_ids_str = ','.join(str(unit_id) for unit_id in unit_ids)
+    print('unit_ids_str:', unit_ids_str)
 
     # Fetch employee data for the logged-in HR's units
+    pending_count_query = f"""
+        SELECT count(kyc.id) pending_count
+        FROM [EmployeeMaster] a
+        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+        JOIN unitmaster u ON u.unitid = a.UnitID
+        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+        LEFT JOIN Zone z ON z.id = d.zoneID
+        WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = 0
+    """
     query = f"""
         SELECT a.employee_id, kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
         FROM [EmployeeMaster] a
@@ -160,6 +171,12 @@ def HR_dashboard(request):
     """
     
     with connections['default'].cursor() as cursor:
+        
+        cursor.execute(pending_count_query)
+        pending_employee_data = cursor.fetchall()
+        pending_employee_count = pending_employee_data[0][0]
+        print('employee_count:', pending_employee_count)
+        
         cursor.execute(query)
         employee_data = cursor.fetchall()
 
@@ -172,6 +189,11 @@ def HR_dashboard(request):
 
         if cursor.description:
             columns = [col[0] for col in cursor.description]  # Extract column names
+            
+            # pending_df = pd.DataFrame(pending_employee_data, columns=columns)  # Convert to DataFrame
+            # pending_employee_count = pending_df.to_dict(orient='records')  # Convert to list of dictionaries
+            # print('pending_employee_count:', pending_employee_count)
+            
             df = pd.DataFrame(employee_data, columns=columns)  # Convert to DataFrame
             employee_details = df.to_dict(orient='records')  # Convert to list of dictionaries
             
@@ -186,7 +208,9 @@ def HR_dashboard(request):
             employee_details = []  # If no data is fetched, return an empty list
             completed_employee_details = []  # If no data is fetched, return an empty list
 
-    return render(request, 'KYC.html', {'employee_details': employee_details, 'completed_employee_details': completed_employee_details,'reject_employee_details': reject_employee_details,'hr_employee': hr_employee,'hr_employee_id': hr_employee_id,'employee_unitname': employee_unitname})
+    return render(request, 'KYC.html', {'employee_details': employee_details, 'completed_employee_details': completed_employee_details,
+                                        'reject_employee_details': reject_employee_details,'hr_employee': hr_employee,'hr_employee_id': hr_employee_id,
+                                        'employee_unitname': employee_unitname,'pending_employee_count': pending_employee_count})
 
 
 
@@ -459,9 +483,9 @@ def download_reports(request):
         # ✅ Convert Dates to UTC Timezone
         # start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
         # end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
-        tz = pytz.UTC  # Define the timezone, e.g., UTC
-        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"), timezone=tz)
-        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d"), timezone=tz) + datetime.timedelta(days=1)
+        # tz = pytz.UTC  # Define the timezone, e.g., UTC
+        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
+        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
         # ✅ Filtering Queryset
         filter_kwargs = {
             "IsProcessed": 1 if report_type == "completed" else 0,
@@ -566,51 +590,131 @@ def download_excel_reports(request):
         return redirect('home')
 
     employee_id = request.session.get('employee_id')
+
     try:
         # ✅ Query Parameters from URL
-        report_type = request.GET.get("type")  # 'completed' or 'non_completed'
-        start_date = request.GET.get("start")  # e.g., '2025-03-18'
-        end_date = request.GET.get("end")      # e.g., '2025-03-19'
+        report_type = request.GET.get("type")
+        start_date = request.GET.get("start")
+        end_date = request.GET.get("end")
 
-        # ✅ Convert Dates to Timezone Aware UTC
-        tz = pytz.UTC  # Define the timezone, e.g., UTC
-        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"), timezone=tz)
-        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d"), timezone=tz) + datetime.timedelta(days=1)
+        # ✅ Convert Dates to Timezone-Aware UTC
+        start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
+        end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
+        
+        with connections['second_db'].cursor() as cursor:
+            cursor.execute("""
+                SELECT ra.regionid, um.unitid
+                FROM regionAllotment ra
+                JOIN unitmaster um ON ra.regionid = um.regionid
+                WHERE ra.staffid = %s
+            """, [employee_id])
+            result = cursor.fetchall()
+            unit_ids = [row[1] for row in result]
 
-        # ✅ Selecting Only Required Columns
-        selected_columns = ['EmpID','DOB','MobileNo', 'AdhaarNo', 'PAN_Number','IsActive','IsProcessed', 'RecievedDate','Verified_Date']
-
-        # ✅ Filtering Data Based on IsProcessed
+        unit_ids_str = ','.join(['%s'] * len(unit_ids))  
+        # ✅ Filtering Data
         if report_type == "completed":
-            queryset = SonataUsersKYCData.objects.filter(
-                IsProcessed=1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
-            ).values(*selected_columns)
+            # queryset = SonataUsersKYCData.objects.filter(
+            #     IsProcessed=1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
+            # ).values(*selected_columns)
+            with connections['default'].cursor() as cursor:
+                query = f"""
+                    SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
+                           a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
+                           kyc.MobileNo, kyc.AdhaarNo, UPPER(kyc.PAN_Number) AS PAN_Number, 
+                           kyc.FinalVerified_by, 
+                           CAST(kyc.Verified_Date AS DATE) AS Verified_Date  
+                    FROM [EmployeeMaster] a
+                    JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+                    JOIN unitmaster u ON u.unitid = a.UnitID
+                    LEFT JOIN regionmaster r ON r.regionid = u.regionid
+                    LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+                    LEFT JOIN Zone z ON z.id = d.zoneID
+                    WHERE a.UnitID IN ({unit_ids_str})
+                    AND kyc.IsActive = 1 
+                    AND kyc.IsProcessed = 1 
+                    AND kyc.Verified_Date BETWEEN %s AND %s;
+                """
+                params = unit_ids + [start_date, end_date]  # Combine unit_ids with the other parameters
+
+                cursor.execute(query, params)  # Execute query with parameters
+                queryset = cursor.fetchall()  # Fetch results
+
+                # Now process the query result
+                columns = [col[0] for col in cursor.description]  # Get column names
+                df = pd.DataFrame(queryset, columns=columns)  # Convert results to DataFrame
+
+        elif report_type == "reject":
+            with connections['default'].cursor() as cursor:
+                query = f"""
+                        SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
+                               a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
+                               kyc.MobileNo, kyc.AdhaarNo, UPPER(kyc.PAN_Number) AS PAN_Number, 
+                               kyc.FinalVerified_by, 
+                               CAST(kyc.Verified_Date AS DATE) AS Verified_Date  
+                        FROM [EmployeeMaster] a
+                        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+                        JOIN unitmaster u ON u.unitid = a.UnitID
+                        LEFT JOIN regionmaster r ON r.regionid = u.regionid
+                        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+                        LEFT JOIN Zone z ON z.id = d.zoneID
+                        WHERE a.UnitID IN ({unit_ids_str})
+                        AND kyc.IsActive = 1 
+                        AND kyc.IsProcessed = -1 
+                        AND kyc.Verified_Date BETWEEN %s AND %s;
+                    """
+                params = unit_ids + [start_date, end_date]  # Combine unit_ids with the other parameters
+
+                cursor.execute(query, params)  # Execute query with parameters
+                queryset = cursor.fetchall()  # Fetch results
+
+                # Now process the query result
+                columns = [col[0] for col in cursor.description]  # Get column names
+                df = pd.DataFrame(queryset, columns=columns)  # Convert results to DataFrame
         else:
-            queryset = SonataUsersKYCData.objects.filter(
-                IsProcessed=-1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
-            ).values(*selected_columns)
- 
-            
+            with connections['default'].cursor() as cursor:
+                query = f"""
+                    SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
+                           a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
+                           kyc.MobileNo, kyc.AdhaarNo, 
+                           UPPER(kyc.PAN_Number) AS PAN_Number
+                    FROM [EmployeeMaster] a
+                    JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+                    JOIN unitmaster u ON u.unitid = a.UnitID
+                    LEFT JOIN regionmaster r ON r.regionid = u.regionid
+                    LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+                    LEFT JOIN Zone z ON z.id = d.zoneID
+                    WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = 0;
+                """
+                params = unit_ids  # Combine unit_ids with the other parameters
 
-        # ✅ Debugging Print (Remove Later)
-        print(f"Total Records Found: {queryset.count()}")
+                cursor.execute(query, params)  # Execute query with parameters
+                queryset = cursor.fetchall()
+                columns = [col[0] for col in cursor.description]
+                df = pd.DataFrame(queryset, columns=columns)
+        
+        # ✅ Check if Data is Available
+        if df.empty:
+            return HttpResponse("No data available for export.", status=404)
 
-        # ✅ Convert Queryset to DataFrame
-        df = pd.DataFrame(list(queryset))
+        # ✅ Convert datetime columns safely
+        for col in ['RecievedDate', 'Verified_Date']:
+            if col in df.columns:
+                df[col] = pd.to_datetime(df[col], errors='coerce')
+                df[col] = df[col].dt.date
 
         # ✅ Response as Excel File
         response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
         response["Content-Disposition"] = f'attachment; filename="{report_type}_KYC_Report.xlsx"'
 
-        # ✅ Save to Excel (Only Required Columns)
-        df.to_excel(response, index=False)
+        df.to_excel(response, index=False, engine="openpyxl")
 
         return response
 
     except Exception as e:
         return HttpResponse(f"Error: {str(e)}", status=500)
-
-
+    
+    
 def run_stored_procedure(request):
     with connection.cursor() as cursor:
         try:
@@ -619,6 +723,60 @@ def run_stored_procedure(request):
         except Exception as e:
             print(f"❌ Error executing SP: {str(e)}")  # Error logging
     return HttpResponse(status=204) 
+
+
+
+def get_verification_status(request):
+    emp_id = request.GET.get('emp_id')  # Get employee ID from request
+
+    print('emp_id status:', emp_id)  # Debugging: Log emp_id
+    if not emp_id:
+        return JsonResponse({"status": "error", "message": "Employee ID is required"}, status=400)
+
+    # Map StageID to Document Type
+    stage_id_mapping = {
+        2: "DOB",
+        3: "passport_photo",
+        4: "MobileNo",
+        5: "AdhaarNo",
+        6: "PAN_Number",
+        7: "aadhaar_front",
+        8: "aadhaar_back",
+        9: "PAN_Img",
+        10: "DL_Img",
+        11: "Passbook_Img",
+    }
+
+    # Fetch all transactions for the employee
+    transactions = SonataUsersKYCTransactionData.objects.filter(EmpID=emp_id)
+    print('transactions:', transactions)  # Debugging: Log transactions
+    # Prepare the verification status dictionary
+    verification_status = {}
+    for stage_id, doc_type in stage_id_mapping.items():
+        transaction = transactions.filter(StageID=stage_id).first()
+        if transaction:
+            verification_status[doc_type] = "verified" if transaction.IsVerified == 1 else "rejected"
+        else:
+            verification_status[doc_type] = "pending"  # If no transaction exists, mark as pending
+
+    return JsonResponse({"status": "success", "data": verification_status})
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

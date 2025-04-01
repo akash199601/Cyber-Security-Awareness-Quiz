@@ -283,7 +283,7 @@
             <span>Loading...</span>
         </div>
 
-        <h3 class="text-center section-title">Pending Data</h3>
+        <h3 class="text-center section-title">Pending Data (<span style="color:red;">{{pending_employee_count}}</span>)</h3>
 
         <div class="table-container">
             <table>
@@ -696,7 +696,7 @@
 
   <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<script>
+  <script>
     $(document).ready(function () {
         // Ensure loader is hidden when the page loads
         $("#overlay-loader").hide();
@@ -717,7 +717,8 @@
             var form = $(this);
             var formData = form.serialize(); // Serialize form data
             var btn = form.find("button"); // Find the button inside the form
-    
+            var docType = form.find("input[name='doc_type']").val(); // Get the document type
+
             $.ajax({
                 url: form.attr("action"),
                 type: "POST",
@@ -732,13 +733,15 @@
     
                         if (form.find("input[name='action']").val() === "verify") {
                             btn.addClass("highlight-yes"); // Highlight "Yes" button in green
+                            
+                            // Remove highlight from the "No" button
+                            var noButton = $(`button[data-doc-type='${docType}']`).closest(".verify-btn").find(".no-btn");
+                            noButton.removeClass("highlight-no");
+                            
                             alert("Verification successful");
                         } else {
                             btn.addClass("highlight-no"); // Highlight "No" button in red
                         }
-                        // Fetch the status after verification/rejection
-                        var empId = form.find("input[name='emp_id']").val(); // Get emp_id
-                        fetchStatus(empId); // Call the fetchStatus function
                     } else {
                         alert("Verification failed: " + response.message);
                     }
@@ -752,13 +755,14 @@
     
         // Handle the "No" button click to open the modal
         $(document).on("click", ".no-btn", function () {
-            var empId = $(this).closest("td").find("input[name='emp_id']").val(); // Get the Employee ID
+            var empId = $("input[name='emp_id']").val();
             var docType = $(this).data("doc-type"); // Get the document type
     
             // Store the empId and docType in the modal for later use
             $("#rejectModal").data("emp-id", empId);
             $("#rejectModal").data("doc-type", docType);
-    
+            
+          
             // Show the modal
             $("#rejectModal").show();
         });
@@ -800,12 +804,15 @@
                         alert("Document rejected successfully!");
                         $("#rejectModal").hide(); // Hide the modal
                         $("#rejectRemark").val(""); // Clear the remark field
-    
+                        
+                        // Remove highlight from "Yes" button
+                        var yesButton = $(`button[data-doc-type='${docType}']`).closest(".verify-btn").find(".yes-btn");
+                        yesButton.removeClass("highlight-yes");
+
                         // Highlight the "No" button in red
                         var noButton = $(`button[data-doc-type='${docType}']`);
                         noButton.addClass("highlight-no");
-    
-                        noButton.closest("td").find(".yes-btn").removeClass("highlight-yes"); // Remove highlight from "Yes" button
+
                     } else {
                         alert("Error: " + response.message);
                     }
@@ -818,6 +825,7 @@
         });
     });
 </script>
+
 
 
 
@@ -1057,48 +1065,51 @@
     
 </script>
 
-{% comment %} <script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const loader = document.getElementById("overlay-loader");
+<script>
+    $(document).on("click", ".employee-row", function () {
+        var empId =   $(this).data("id"); // Get the selected employee ID
     
-        function showLoader() {
-            loader.style.display = "flex";  // Show loader
-        }
+        // Highlight the selected row
+        $(".employee-row").css("background-color", ""); // Reset all rows
+        $(this).css("background-color", "#94d994"); // Highlight selected row (Light Green)
     
-        function hideLoader() {
-            loader.style.display = "none";  // Hide loader
-        }
+        // Reset all button highlights
+        $(".yes-btn").removeClass("highlight-yes");
+        $(".no-btn").removeClass("highlight-no");
     
-        function handleVerification(event) {
-            event.preventDefault(); // Stop form submission (for Yes button)
+        // Fetch verification status for the selected employee
+        $.ajax({
+            url: "/get_verification_status/", // Backend API endpoint
+            type: "GET",
+            data: { emp_id: empId }, // Pass the selected employee ID
+            success: function (response) {
+                if (response.status === "success") {
+                    var verificationData = response.data;
     
-            showLoader(); // Show loader
+                    // Update button highlights based on verification status
+                    for (var docType in verificationData) {
+                        var status = verificationData[docType];
+                        var yesButton = $(`button[data-doc-type='${docType}']`).closest(".verify-btn").find(".yes-btn");
+                        var noButton = $(`button[data-doc-type='${docType}']`).closest(".verify-btn").find(".no-btn");
     
-            const empId = this.closest(".verify-btn").querySelector("input[name='emp_id']").value;
-            const docType = this.closest(".verify-btn").querySelector("input[name='doc_type']").value;
-            const action = this.classList.contains("yes-btn") ? "verified" : "rejected";
-    
-            // Simulating an API request (Replace with actual API call)
-            setTimeout(() => {
-                alert(`Verification ${action} for Employee ID: ${empId}, Document: ${docType}`);
-                hideLoader(); // Hide loader after verification response
-            }, 2000);
-        }
-    
-        // Yes Button (Submit Form with Loader)
-        document.querySelectorAll(".yes-btn").forEach(button => {
-            button.addEventListener("click", handleVerification);
+                        if (status === "verified") {
+                            yesButton.addClass("highlight-yes"); // Highlight "Yes" button in green
+                            noButton.removeClass("highlight-no"); // Remove "No" highlight
+                        } else if (status === "rejected") {
+                            noButton.addClass("highlight-no"); // Highlight "No" button in red
+                            yesButton.removeClass("highlight-yes"); // Remove "Yes" highlight
+                        }
+                    }
+                } else {
+                    alert("Error fetching verification status: " + response.message);
+                }
+            },
+            error: function () {
+                alert("Error fetching verification status!");
+            }
         });
-    
-        // No Button (Trigger Alert & Hide Loader)
-        document.querySelectorAll(".no-btn").forEach(button => {
-            button.addEventListener("click", handleVerification);
-        });
-    
-        // Ensure loader is hidden initially
-        hideLoader();
     });
-</script>     {% endcomment %}
+    </script>
 
 </body>
 </html>
