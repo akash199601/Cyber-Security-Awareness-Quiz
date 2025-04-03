@@ -24,7 +24,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 SECRET_KEY = 'django-insecure-p4&khk1uc&=anf&$#yxm_9an6ug4p$&)^7a9^gx=xfa^ka(w!b'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False
 
 ALLOWED_HOSTS = ['192.168.18.80','127.0.0.1']
 
@@ -133,9 +133,9 @@ DATABASES = {
     "second_db": {
         "ENGINE": "mssql",
         "NAME": "HR",
-        "USER": "SFPL_HR",
-        "PASSWORD": "$SS0nata09876",
-        "HOST": "172.17.130.207",
+        "USER": "SFPL_Connect",
+        "PASSWORD": "$%n5bF33%X",
+        "HOST": "172.17.130.203",
         "PORT": "1433",
         "OPTIONS": {
             "driver": "ODBC Driver 17 for SQL Server",
