@@ -725,6 +725,9 @@ def run_stored_procedure(request):
     return HttpResponse(status=204) 
 
 
+def helpdesk(request):
+    return render(request, 'helpdesk.html')
+
 
 def get_verification_status(request):
     emp_id = request.GET.get('emp_id')  # Get employee ID from request

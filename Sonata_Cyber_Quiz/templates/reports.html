@@ -41,6 +41,11 @@
       window.history.replaceState(null, null, window.location.href);
   }
   </script>
+  <script>
+    function goToHelpdesk() {
+        window.location.href = "/helpdesk/";  // Replace with your actual Helpdesk page URL
+    }
+</script>
 
 </head>
 <body>
@@ -50,6 +55,7 @@
     <h3>HR Dashboard</h3>
     <button class="nav-button" onclick="goToKyc()">Verification</button>
     <button class="nav-button active">Reports</button>
+    <button class="nav-button" onclick="goToHelpdesk()">Helpdesk</button>
     <button class="nav-button"><a href="{% url 'logout' %}" style="color:white;">Logout</a></button>
 
   </div>

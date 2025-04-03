@@ -17,7 +17,7 @@ urlpatterns = [
     path('logout/', views.user_logout, name='logout'),
     path('final-submission/', views.final_submission, name='final_submission'),
     path('get_verification_status/', views.get_verification_status, name='get_verification_status'),
-    
+    path('helpdesk/', views.helpdesk, name='helpdesk'),
     
     
     # path('candidate/', views.candidate_details, name='candidate_details'),

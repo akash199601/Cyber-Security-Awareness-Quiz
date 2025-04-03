@@ -253,6 +253,43 @@
   }
 </script>
 
+<script>
+    function goToHelpdesk() {
+        window.location.href = "/helpdesk/";  // Replace with your actual Helpdesk page URL
+    }
+</script>
+
+{% comment %} // filter by emp id {% endcomment %}
+<script>
+    function filterByEmpId() {
+        // Get the entered Employee ID
+        const empId = document.getElementById("filterEmpId").value.trim();
+
+        // Get all rows from the table
+        const rows = document.querySelectorAll("#pendingemployeeTableBody tr");
+
+        // Loop through rows and hide/show based on Employee ID
+        rows.forEach(row => {
+            const rowEmpId = row.querySelector("td:nth-child(2)").textContent.trim(); // Get Employee ID from the second column
+            if (empId === "" || rowEmpId.includes(empId)) {
+                row.style.display = ""; // Show row
+            } else {
+                row.style.display = "none"; // Hide row
+            }
+        });
+    }
+
+    function resetFilter() {
+        // Clear the input field
+        document.getElementById("filterEmpId").value = "";
+
+        // Show all rows
+        const rows = document.querySelectorAll("#pendingemployeeTableBody tr");
+        rows.forEach(row => {
+            row.style.display = ""; // Show row
+        });
+    }
+</script>
 
 
 </head>
@@ -262,6 +299,7 @@
     <h3>HR Dashboard</h3>
     <button class="nav-button active">Verification</button>
     <button class="nav-button" onclick="goToReports()">Reports</button>
+    <button class="nav-button" onclick="goToHelpdesk()">Helpdesk</button>
     <button class="nav-button"><a href="{% url 'logout' %}" style="color:white;">Logout</a></button>
 
   </div>
@@ -275,7 +313,11 @@
     <header><h3>Employee KYC Verification</h3></header>
 
     <button style="color:white;background:blue;" onclick="runStoredProcedure()">Sync Data</button>
-
+    <div class="filters" style="text-align: center; margin-bottom: 20px;">
+        <input type="text" id="filterEmpId" placeholder="Enter Employee ID" style="padding: 8px; width: 200px; border-radius: 5px; border: 1px solid #ccc;">
+        <button onclick="filterByEmpId()" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Filter</button>
+        <button onclick="resetFilter()" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset</button>
+    </div>
     <br>
     <div class="content-container">
 

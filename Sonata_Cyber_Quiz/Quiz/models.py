@@ -210,6 +210,7 @@ class TblSonataUsersKYCDataSignDesk(models.Model):
     Status = models.CharField(max_length=255, null=True, blank=True)
     reference_id = models.TextField(null=True, blank=True)
     uniqueness_id = models.TextField(null=True, blank=True)
+    UpdatedDate = models.DateTimeField(auto_now_add=True)
 
     class Meta:
         db_table = "Tbl_Sonata_Users_KYC_Data_SignDesk"
