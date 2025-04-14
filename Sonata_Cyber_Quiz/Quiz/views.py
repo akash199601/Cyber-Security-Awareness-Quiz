@@ -695,7 +695,7 @@ def download_excel_reports(request):
         
         # ✅ Check if Data is Available
         if df.empty:
-            return HttpResponse("No data available for export.", status=404)
+            return JsonResponse({'success': False, 'message': 'No data available for export.'})
 
         # ✅ Convert datetime columns safely
         for col in ['RecievedDate', 'Verified_Date']:

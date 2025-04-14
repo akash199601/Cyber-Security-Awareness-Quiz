@@ -120,7 +120,7 @@
         window.location.href = `/download-reports/?type=${reportType}&start=${startDate}&end=${endDate}`;
     }
 
-    function downloadExcelReport() {
+    /*function downloadExcelReport() {
       let reportType = document.getElementById('reportType').value;
       let startDate = document.getElementById('startDate').value;
       let endDate = document.getElementById('endDate').value;
@@ -132,7 +132,47 @@
 
       // ✅ Redirect to Django view with selected filters
       window.location.href = `/download-excel-reports/?type=${reportType}&start=${startDate}&end=${endDate}`;
+    }*/
+    function downloadExcelReport() {
+      let reportType = document.getElementById('reportType').value;
+      let startDate = document.getElementById('startDate').value;
+      let endDate = document.getElementById('endDate').value;
+  
+      if (!startDate || !endDate) {
+          alert("Please select both start and end dates.");
+          return;
+      }
+  
+      let url = `/download-excel-reports/?type=${reportType}&start=${startDate}&end=${endDate}`;
+  
+      fetch(url)
+        .then(response => {
+            const contentType = response.headers.get("content-type");
+
+            // If backend returned JSON, check for no-data message
+            if (contentType && contentType.includes("application/json")) {
+                return response.json().then(data => {
+                    if (!data.success) {
+                        alert(data.message);  // Show alert for no data
+                    }
+                });
+            } else {
+                // It's an Excel file, trigger download
+                return response.blob().then(blob => {
+                    const link = document.createElement('a');
+                    link.href = URL.createObjectURL(blob);
+                    link.download = `${reportType}_KYC_Report.xlsx`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                });
+            }
+        })
+        .catch(error => {
+            alert("Something went wrong: " + error);
+        });
     }
+  
   </script>
 
 </body>
