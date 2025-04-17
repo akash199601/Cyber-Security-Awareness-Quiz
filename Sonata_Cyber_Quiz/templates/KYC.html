@@ -292,6 +292,37 @@
     }
 </script>
 
+<script>
+    function filterByRejectEmpId() {
+        // Get the entered Employee ID
+        const empId = document.getElementById("filterRejectEmpId").value.trim();
+
+        // Get all rows from the table
+        const rows = document.querySelectorAll("#rejectedemployeeTableBody tr");
+
+        // Loop through rows and hide/show based on Employee ID
+        rows.forEach(row => {
+            const rowEmpId = row.querySelector("td:nth-child(2)").textContent.trim(); // Get Employee ID from the second column
+            if (empId === "" || rowEmpId.includes(empId)) {
+                row.style.display = ""; // Show row
+            } else {
+                row.style.display = "none"; // Hide row
+            }
+        });
+    }
+
+    function resetRejectFilter() {
+        // Clear the input field
+        document.getElementById("filterRejectEmpId").value = "";
+
+        // Show all rows
+        const rows = document.querySelectorAll("#rejectedemployeeTableBody tr");
+        rows.forEach(row => {
+            row.style.display = ""; // Show row
+        });
+    }
+</script>
+
 
 </head>
 <body>
@@ -651,6 +682,11 @@
     </div>
     <h1 style="text-align:center">Rejected Data</h1>
     <div class="content-container">
+        <div class="filters" style="text-align: center; margin-bottom: 20px;">
+            <input type="text" id="filterRejectEmpId" placeholder="Enter Employee ID" style="padding: 8px; width: 200px; border-radius: 5px; border: 1px solid #ccc;">
+            <button onclick="filterByRejectEmpId()" style="padding: 8px 15px; background-color: #007bff; color: white; border: none; border-radius: 5px; cursor: pointer;">Filter</button>
+            <button onclick="resetRejectFilter()" style="padding: 8px 15px; background-color: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer;">Reset</button>
+        </div>
         <div class="table-container">
             <table>
                 <thead>
@@ -662,10 +698,11 @@
                         <th>AADHAR</th>
                         <th>PAN</th>
                         <th>DOB</th>
+                        <th>Remark</th>
                         <th>Verified Date</th>
                     </tr>
                 </thead>
-                <tbody id="completedemployeeTableBody">
+                <tbody id="rejectedemployeeTableBody">
                     {% for emp in reject_employee_details %}
                     <tr>
                         <td>{{ forloop.counter }}</td> 
@@ -674,6 +711,7 @@
                         <td>{{ emp.AdhaarNo }}</td>
                         <td>{{ emp.PAN_Number }}</td>
                         <td>{{ emp.DOB }}</td>
+                        <td style="text-align: left;">{{ emp.remark }}</td>
                         <td>{{ emp.Verified_Date }}</td>
 
                     </tr>

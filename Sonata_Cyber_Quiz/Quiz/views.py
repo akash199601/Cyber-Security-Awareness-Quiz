@@ -160,15 +160,37 @@ def HR_dashboard(request):
     """
 
     rejected_query = f"""
-        SELECT a.employee_id,kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
+        WITH NumberedRemarks AS (
+            SELECT 
+                trn.EmpID,
+                trn.Remark,
+                ROW_NUMBER() OVER (PARTITION BY trn.EmpID ORDER BY trn.ID) AS rn
+            FROM Tbl_Sonata_Users_KYC_Transaction_Data trn
+        	WHERE trn.Remark <> '' -- Exclude empty remarks
+        )
+        SELECT a.employee_id,
+               kyc.EmpID,
+               FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB,
+               kyc.MobileNo,
+               kyc.AdhaarNo,
+               UPPER(kyc.PAN_Number) AS PAN_Number,
+               a.first_name,
+               a.surname,
+                STRING_AGG(CAST(nr.rn AS VARCHAR) + '. ' + nr.Remark, ', ') AS remark,  -- Combine all remarks into a single string separated by ';'
+               kyc.Verified_Date
         FROM [EmployeeMaster] a
         JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
         JOIN unitmaster u ON u.unitid = a.UnitID
         LEFT JOIN regionmaster r ON r.regionid = u.regionid
         LEFT JOIN Division d ON d.divisionalid = r.divisionalid
         LEFT JOIN Zone z ON z.id = d.zoneID
-        WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = -1
-    """
+        LEFT JOIN NumberedRemarks nr ON nr.EmpID = a.employee_id
+        WHERE a.UnitID IN ({unit_ids_str})
+          AND kyc.IsActive = 1
+          AND kyc.IsProcessed = -1
+        GROUP BY a.employee_id, kyc.EmpID, kyc.DOB, kyc.MobileNo, kyc.AdhaarNo, kyc.PAN_Number, a.first_name, a.surname, kyc.Verified_Date
+            
+        """
     
     with connections['default'].cursor() as cursor:
         
@@ -184,9 +206,6 @@ def HR_dashboard(request):
         cursor.execute(completed_query)
         completed_employee_data = cursor.fetchall()
         
-        cursor.execute(rejected_query)
-        reject_employee_data = cursor.fetchall()
-
         if cursor.description:
             columns = [col[0] for col in cursor.description]  # Extract column names
             
@@ -201,13 +220,24 @@ def HR_dashboard(request):
             completed_df = pd.DataFrame(completed_employee_data, columns=columns)
             completed_employee_details = completed_df.to_dict(orient='records')
             
-            reject_df = pd.DataFrame(reject_employee_data, columns=columns)
-            reject_employee_details = reject_df.to_dict(orient='records')
 
         else:
             employee_details = []  # If no data is fetched, return an empty list
             completed_employee_details = []  # If no data is fetched, return an empty list
+            reject_employee_details = []  # If no data is fetched, return an empty list
+            
+        cursor.execute(rejected_query)
+        reject_employee_data = cursor.fetchall()
 
+        if cursor.description:
+            columns = [col[0] for col in cursor.description]
+
+            reject_df = pd.DataFrame(reject_employee_data, columns=columns)
+            reject_employee_details = reject_df.to_dict(orient='records')
+
+        else:
+            reject_employee_details = []  # If no data is fetched, return an empty list
+            
     return render(request, 'KYC.html', {'employee_details': employee_details, 'completed_employee_details': completed_employee_details,
                                         'reject_employee_details': reject_employee_details,'hr_employee': hr_employee,'hr_employee_id': hr_employee_id,
                                         'employee_unitname': employee_unitname,'pending_employee_count': pending_employee_count})
