@@ -1,0 +1,209 @@
+
+
+{% load static %}
+{% load humanize %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"/>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        p {
+            margin: 0;
+            color: #c52167;
+        }
+        body {
+            height: 100vh; /* Full height */
+            width: 100%;
+            padding: 10px;
+            background-image: url("{% static 'image1.png' %}");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+            overflow: hidden; /* Prevent scrolling of body */
+        }
+        .container {
+            margin: auto;
+            margin-top: 80px; 
+            padding: 20px 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            height: 85vh; /* Set height to allow scrolling */
+            overflow-y: auto; /* Enable vertical scrolling */
+        }
+        label.box {
+            display: flex;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid black;
+            background-color: white;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        input[type="radio"]:checked + label {
+            border-color: #8e498e;
+        }
+        input[type="radio"]:checked + label .circle {
+            border: 6px solid #8e498e;
+            background-color: #fff;
+        }
+        label.box:hover {
+            background: #d5bbf7;
+        }
+        label.box .course {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        label.box .circle {
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #ddd;
+            display: inline-block;
+        }
+        label.box .subject {
+            color: black;
+            font-size: 16px;
+        }
+        .btn.btn-primary {
+            border-radius: 25px;
+            margin-top: 20px;
+        }
+        #timer {
+            font-size: 1.2rem; /* Timer font size */
+            position: fixed; /* Keep timer fixed */
+            top: 30px; /* Position from top */
+            left: 50%; 
+            background-color: white;/* Center horizontally */
+            padding: 5px 10px;
+            border-radius: 10px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1); 
+            transform: translateX(-50%); /* Adjust to exactly center */
+            z-index: 1000; /* Bring it above other elements */
+        }
+    </style>
+</head>
+<body>
+    <div class="container mb-5">
+        {% if is_retest %}
+    <div class="alert alert-info">
+        You are about to take the test for the {{ retest_count|add:1|ordinal }} time.
+    </div>
+    {% endif %}
+    <!-- Google Translate Widget -->
+    <div id="google_translate_element" class="text-center mb-4"></div>
+        <p id="timer" class="text-center">Time left: 20:00</p>
+        <form id="quiz-form" method="POST" action="{% url 'submit_quiz' section=section %}">
+            {% csrf_token %}
+            {% for question, options in questions_with_options %}
+            <div class="row mb-4">
+                <div class="col-12">
+                    <p class="fw-bold" style="font-size:1.2rem;">{{ forloop.counter }}. {{ question.question_text }}</p>
+                    {% for option in options %}
+                    <div>
+                        <input type="radio" id="option-{{ option.id }}" name="question-{{ question.id }}" value="{{ option.id }}">
+                        <label for="option-{{ option.id }}" class="box">
+                            <div class="course">
+                                <span class="circle"></span>
+                                <span class="subject">{{ option.option_text }}</span>
+                            </div>
+                        </label>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endfor %}
+            <div class="col-12">
+                <div class="d-flex justify-content-center">
+                    <button type="submit" class="btn btn-primary px-4 py-2 fw-bold">Submit Quiz</button>
+                </div>
+            </div> 
+        </form>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script>
+        $(document).ready(function($) {
+            // Prevent back navigation
+            history.pushState(null, document.title, location.href);
+            
+            $(window).on('popstate', function() {
+                history.pushState(null, document.title, location.href); // Keep user on the same page
+            });
+            
+            // Your timer code here...
+            let timerElement = document.getElementById('timer');
+            let formElement = document.getElementById('quiz-form');
+            let duration = 20 * 60; // 20 minutes in seconds
+            let isSubmitting = false;
+    
+            // Check for saved time in localStorage
+            if (localStorage.getItem('remainingTime')) {
+                duration = parseInt(localStorage.getItem('remainingTime'), 10);
+            }
+    
+            window.addEventListener('beforeunload', function(event) {
+                if (duration > 0 && !isSubmitting) {
+                    event.preventDefault();
+                    event.returnValue = ''; // Show a confirmation dialog
+                }
+            });
+    
+            function updateTimer() {
+                let minutes = Math.floor(duration / 60);
+                let seconds = duration % 60;
+                timerElement.textContent = `Time left: ${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                localStorage.setItem('remainingTime', duration);
+                
+                if (--duration < 0) {
+                    clearInterval(interval);
+                    formElement.submit(); // Auto-submit after time is up
+                    localStorage.removeItem('remainingTime'); // Clear saved time
+                }
+            }
+    
+            let interval = setInterval(updateTimer, 1000);
+    
+            formElement.addEventListener('submit', function() {
+                isSubmitting = true; // Mark as submitting
+                clearInterval(interval); // Clear the timer interval
+                localStorage.removeItem('remainingTime'); // Clear saved time
+            });
+        });
+    </script>
+    
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',  // Default page language (English)
+                includedLanguages: 'en,hi',  // Only English and Hindi are included
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE,  // Simple layout with no extra information
+                autoDisplay: false  // Prevents automatic language selection
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+</body>
+</html>
+
+
+
