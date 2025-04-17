@@ -149,7 +149,9 @@ def HR_dashboard(request):
 
     # Fetch completed employee data for the logged-in HR's units
     completed_query = f"""
-        SELECT a.employee_id,kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,a.surname,kyc.Verified_Date
+        SELECT a.employee_id,kyc.EmpID,FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, kyc.MobileNo, kyc.AdhaarNo,UPPER(kyc.PAN_Number) AS PAN_Number,a.first_name,
+        a.surname,
+        FORMAT(DATEADD(MINUTE, 330, kyc.Verified_Date), 'yyyy-MM-dd') AS Verified_Date
         FROM [EmployeeMaster] a
         JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
         JOIN unitmaster u ON u.unitid = a.UnitID

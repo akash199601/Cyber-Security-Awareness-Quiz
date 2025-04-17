@@ -1781,3 +1781,42 @@ Traceback (most recent call last):
     raise ValueError(err) from err
 ValueError: 10 columns passed, passed data had 9 columns
 "GET /HR_dashboard/ HTTP/1.1" 500 184777
+Internal Server Error: /HR_dashboard/
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\internals\construction.py", line 939, in _finalize_columns_and_data
+    columns = _validate_or_indexify_columns(contents, columns)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\internals\construction.py", line 986, in _validate_or_indexify_columns
+    raise AssertionError(
+    ...<2 lines>...
+    )
+AssertionError: 9 columns passed, passed data had 8 columns
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "E:\Laptop Data\Cyber-Security-Awareness-Quiz\Cyber-Security-Awareness-Quiz\Sonata_Cyber_Quiz\Quiz\views.py", line 218, in HR_dashboard
+    df = pd.DataFrame(employee_data, columns=columns)  # Convert to DataFrame
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\frame.py", line 851, in __init__
+    arrays, columns, index = nested_data_to_arrays(
+                             ~~~~~~~~~~~~~~~~~~~~~^
+        # error: Argument 3 to "nested_data_to_arrays" has incompatible
+        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    ...<4 lines>...
+        dtype,
+        ^^^^^^
+    )
+    ^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\internals\construction.py", line 520, in nested_data_to_arrays
+    arrays, columns = to_arrays(data, columns, dtype=dtype)
+                      ~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\internals\construction.py", line 845, in to_arrays
+    content, columns = _finalize_columns_and_data(arr, columns, dtype)
+                       ~~~~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\pandas\core\internals\construction.py", line 942, in _finalize_columns_and_data
+    raise ValueError(err) from err
+ValueError: 9 columns passed, passed data had 8 columns
+"GET /HR_dashboard/ HTTP/1.1" 500 180637
