@@ -39,7 +39,7 @@
     .table-container { 
         flex: 2; 
         background: white; 
-        padding: 15px; 
+        /*padding: 15px; */
         border-radius: 8px; 
         box-shadow: 0 0 10px rgba(0,0,0,0.1);
         margin-bottom: 20px;
@@ -360,7 +360,7 @@
         </div>
         <div class="table-container">
             <table>
-                <thead>
+                <thead style="position: sticky;top: 0;z-index: 2;">
                     <tr>
                         <th>S/N</th>
                         <th>Emp ID</th>
@@ -649,8 +649,8 @@
         <div class="content-container">
           <div class="table-container">
             <table>
-                <thead>
-                  <button id="refreshTable">Refresh Table</button>
+                <thead style="position: sticky;top: 0;z-index: 2;">
+                  {% comment %} <button id="refreshTable">Refresh Table</button> {% endcomment %}
                     <tr>
                       <th>S/N</th>
                       <th>Emp ID</th>
@@ -689,8 +689,8 @@
         </div>
         <div class="table-container">
             <table>
-                <thead>
-                  <button id="refreshTable">Refresh Table</button>
+                <thead style="position: sticky;top: 0;z-index: 2;">
+                  {% comment %} <button id="refreshTable">Refresh Table</button> {% endcomment %}
                     <tr>
                         <th>S/No.</th>
                         <th>Emp ID</th>
@@ -698,7 +698,7 @@
                         <th>AADHAR</th>
                         <th>PAN</th>
                         <th>DOB</th>
-                        <th>Remark</th>
+                        <th style="width:300px;">Remark</th>
                         <th>Verified Date</th>
                     </tr>
                 </thead>
@@ -719,7 +719,7 @@
                   
                 </tbody>
             </table>
-        </div>
+        </div> 
     </div>
 
   </div>

@@ -177,7 +177,7 @@ def HR_dashboard(request):
                a.first_name,
                a.surname,
                 STRING_AGG(CAST(nr.rn AS VARCHAR) + '. ' + nr.Remark, ', ') AS remark,  -- Combine all remarks into a single string separated by ';'
-               kyc.Verified_Date
+               FORMAT(DATEADD(MINUTE, 330, kyc.Verified_Date), 'yyyy-MM-dd') AS Verified_Date
         FROM [EmployeeMaster] a
         JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
         JOIN unitmaster u ON u.unitid = a.UnitID
