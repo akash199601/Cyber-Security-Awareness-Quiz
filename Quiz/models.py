@@ -158,6 +158,8 @@ class SonataUsersKYCData(models.Model):
     IsProcessed = models.IntegerField(default=0)
     FinalVerified_by = models.IntegerField(null=True, blank=True)
     Verified_Date = models.DateTimeField(auto_now_add=True)
+    IsAadharVerified =models.BooleanField(default=True)
+    Reset_Status = models.IntegerField(null=True, blank=True)
     class Meta:
         db_table = "Tbl_Sonata_Users_KYC_Data"
         managed = False
