@@ -248,7 +248,7 @@ def HR_dashboard(request):
 
 def get_emp_images(request):
     emp_id = request.GET.get('empid')
-    print('emp_id:', emp_id)
+    print('emp_id for candidate image:', emp_id)
 
     if not emp_id:
         return JsonResponse({'error': 'EmpID is required'}, status=400)
@@ -269,49 +269,47 @@ def get_emp_images(request):
     with connection.cursor() as cursor:
         cursor.execute(query, [emp_id])
         row = cursor.fetchone()
+        if not row:
+            return JsonResponse({'error': 'Employee not found'}, status=404)
 
-    if not row:
-        print('-------3')
-        return JsonResponse({'error': 'Employee not found'}, status=404)
+        columns = [col[0] for col in cursor.description]
+        row_dict = dict(zip(columns, row))
 
-    # Extracting required fields
+    # Now you can safely access fields by name
     data = {
-        'Zone': row[0],
-        'DivisionName': row[1],
-        'RegionName': row[2],
-        'UnitName': row[3],
-        'StaffID': row[4],  # Employee ID
-        'first_name': row[5],
-        'surname': row[6],
-        'EmpDOB': row[7],
-        'EmpMobileNo': row[8],
-        'DOJ': row[9],
-        'EmpPanNo': row[10],
-        'EmpID': row[13],
-        'DOB': row[14],
-        'Photo': convert_binary_to_base64(row[15]),
-        'MobileNo': row[16],
-        'AdhaarNo': row[17],
-        'PAN_Number': row[18],
-        'AdhaarFrontImg': convert_binary_to_base64(row[19]),
-        'AdhaarBackImg': convert_binary_to_base64(row[20]),
-        'PAN_Img': convert_binary_to_base64(row[21]),
-        'DL_Img': convert_binary_to_base64(row[22]),
-        'Passbook_Img': convert_binary_to_base64(row[23]),
-        'FullName_Signdesk': row[29],
-        'AadharNo_Signdesk': row[30],
-        'DOB_Signdesk': row[31],
-        'Care_of': row[32],
-        'District': row[33],
-        'House': row[34],
-        'ProfileImage': convert_binary_to_base64(row[35]),
-
+        'Zone': row_dict.get('Zone'),
+        'DivisionName': row_dict.get('Divisionname'),
+        'RegionName': row_dict.get('regionname'),
+        'UnitName': row_dict.get('unitname'),
+        'StaffID': row_dict.get('employee_id'),
+        'first_name': row_dict.get('first_name'),
+        'surname': row_dict.get('surname'),
+        'EmpDOB': row_dict.get('EmpDOB'),
+        'EmpMobileNo': row_dict.get('MobileNo'),
+        'DOJ': row_dict.get('DOJ'),
+        'EmpPanNo': row_dict.get('PanNo'),
+        'EmpID': row_dict.get('EmpID'),
+        'DOB': row_dict.get('DOB'),
+        'Photo': convert_binary_to_base64(row_dict.get('Photo')),
+        'MobileNo': row_dict.get('MobileNo'),
+        'AdhaarNo': row_dict.get('AdhaarNo'),
+        'PAN_Number': row_dict.get('PAN_Number'),
+        'AdhaarFrontImg': convert_binary_to_base64(row_dict.get('AdhaarFrontImg')),
+        'AdhaarBackImg': convert_binary_to_base64(row_dict.get('AdhaarBackImg')),
+        'PAN_Img': convert_binary_to_base64(row_dict.get('PAN_Img')),
+        'DL_Img': convert_binary_to_base64(row_dict.get('DL_Img')),
+        'Passbook_Img': convert_binary_to_base64(row_dict.get('Passbook_Img')),
+        'FullName_Signdesk': row_dict.get('FullName'),
+        'AadharNo_Signdesk': row_dict.get('AadharNo'),
+        'DOB_Signdesk': row_dict.get('DOB'),
+        'Care_of': row_dict.get('Care_Of'),
+        'District': row_dict.get('District'),
+        'House': row_dict.get('House'),
+        'ProfileImage': convert_binary_to_base64(row_dict.get('ProfileImage')),
     }
 
     print(f"✅ Data fetched for EmpID {emp_id}: {data}")
-
     return JsonResponse(data)
-
 
 # 🔹 Function to Convert Binary to Base64
 def convert_binary_to_base64(binary_data):
