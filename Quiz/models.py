@@ -165,7 +165,7 @@ class SonataUsersKYCData(models.Model):
         managed = False
         
 
-       
+    #  add columns to the existing table  
        
 class RegionAllotment(models.Model):
     id = models.AutoField(primary_key=True)
