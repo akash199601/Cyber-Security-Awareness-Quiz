@@ -622,15 +622,13 @@ def download_excel_reports(request):
     employee_id = request.session.get('employee_id')
 
     try:
-        # ✅ Query Parameters from URL
         report_type = request.GET.get("type")
         start_date = request.GET.get("start")
         end_date = request.GET.get("end")
 
-        # ✅ Convert Dates to Timezone-Aware UTC
         start_date = make_aware(datetime.datetime.strptime(start_date, "%Y-%m-%d"))
         end_date = make_aware(datetime.datetime.strptime(end_date, "%Y-%m-%d")) + datetime.timedelta(days=1)
-        
+
         with connections['second_db'].cursor() as cursor:
             cursor.execute("""
                 SELECT ra.regionid, um.unitid
@@ -641,18 +639,15 @@ def download_excel_reports(request):
             result = cursor.fetchall()
             unit_ids = [row[1] for row in result]
 
-        unit_ids_str = ','.join(['%s'] * len(unit_ids))  
-        # ✅ Filtering Data
-        if report_type == "completed":
-            # queryset = SonataUsersKYCData.objects.filter(
-            #     IsProcessed=1, Verified_Date__gte=start_date, Verified_Date__lt=end_date, FinalVerified_by=employee_id
-            # ).values(*selected_columns)
-            with connections['default'].cursor() as cursor:
+        unit_ids_str = ','.join(['%s'] * len(unit_ids))
+
+        with connections['default'].cursor() as cursor:
+            if report_type == "completed":
                 query = f"""
                     SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
                            a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
                            kyc.MobileNo, kyc.AdhaarNo, UPPER(kyc.PAN_Number) AS PAN_Number, 
-                           kyc.FinalVerified_by, 
+                           CAST(kyc.FinalVerified_by AS VARCHAR) + ' - ' + verifier.first_name + ' ' + verifier.surname AS Verified_by, 
                            CAST(kyc.Verified_Date AS DATE) AS Verified_Date  
                     FROM [EmployeeMaster] a
                     JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
@@ -660,49 +655,58 @@ def download_excel_reports(request):
                     LEFT JOIN regionmaster r ON r.regionid = u.regionid
                     LEFT JOIN Division d ON d.divisionalid = r.divisionalid
                     LEFT JOIN Zone z ON z.id = d.zoneID
+                    LEFT JOIN EmployeeMaster verifier ON verifier.employee_id = kyc.FinalVerified_by
                     WHERE a.UnitID IN ({unit_ids_str})
                     AND kyc.IsActive = 1 
                     AND kyc.IsProcessed = 1 
                     AND kyc.Verified_Date BETWEEN %s AND %s;
                 """
-                params = unit_ids + [start_date, end_date]  # Combine unit_ids with the other parameters
+                params = unit_ids + [start_date, end_date]
 
-                cursor.execute(query, params)  # Execute query with parameters
-                queryset = cursor.fetchall()  # Fetch results
-
-                # Now process the query result
-                columns = [col[0] for col in cursor.description]  # Get column names
-                df = pd.DataFrame(queryset, columns=columns)  # Convert results to DataFrame
-
-        elif report_type == "reject":
-            with connections['default'].cursor() as cursor:
+            elif report_type == "reject":
                 query = f"""
-                        SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
-                               a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
-                               kyc.MobileNo, kyc.AdhaarNo, UPPER(kyc.PAN_Number) AS PAN_Number, 
-                               kyc.FinalVerified_by, 
-                               CAST(kyc.Verified_Date AS DATE) AS Verified_Date  
-                        FROM [EmployeeMaster] a
-                        JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
-                        JOIN unitmaster u ON u.unitid = a.UnitID
-                        LEFT JOIN regionmaster r ON r.regionid = u.regionid
-                        LEFT JOIN Division d ON d.divisionalid = r.divisionalid
-                        LEFT JOIN Zone z ON z.id = d.zoneID
-                        WHERE a.UnitID IN ({unit_ids_str})
-                        AND kyc.IsActive = 1 
-                        AND kyc.IsProcessed = -1 
-                        AND kyc.Verified_Date BETWEEN %s AND %s;
-                    """
-                params = unit_ids + [start_date, end_date]  # Combine unit_ids with the other parameters
+                    SELECT 
+                        z.Zone, 
+                        d.Divisionname, 
+                        r.regionname, 
+                        u.unitname,
+                        kyc.EmpID,
+                        a.first_name,
+                        a.surname,
+                        FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB,
+                        kyc.MobileNo,
+                        kyc.AdhaarNo,
+                        UPPER(kyc.PAN_Number) AS PAN_Number,
+                        CAST(kyc.FinalVerified_by AS VARCHAR) + ' - ' + verifier.first_name + ' ' + verifier.surname AS Verified_by,
+                        ISNULL(REPLACE(REPLACE(REPLACE(TRIM(trn.Remark), CHAR(13), ' '), CHAR(10), ' '), CHAR(9), ' '), '') AS remark,
+                        CAST(kyc.Verified_Date AS DATE) AS Verified_Date 
+                    FROM [EmployeeMaster] a
+                    JOIN Tbl_Sonata_Users_KYC_Data kyc ON kyc.EmpID = a.employee_id
+                    JOIN unitmaster u ON u.unitid = a.UnitID
+                    LEFT JOIN regionmaster r ON r.regionid = u.regionid
+                    LEFT JOIN Division d ON d.divisionalid = r.divisionalid
+                    LEFT JOIN Zone z ON z.id = d.zoneID
+                    OUTER APPLY (
+                        SELECT TOP 1 trn.Remark
+                        FROM Tbl_Sonata_Users_KYC_Transaction_Data trn
+                        WHERE trn.EmpID = a.employee_id AND TRIM(trn.Remark) <> ''
+                        ORDER BY trn.ID
+                    ) trn
+                    LEFT JOIN EmployeeMaster verifier ON verifier.employee_id = kyc.FinalVerified_by
+                    WHERE a.UnitID IN ({unit_ids_str})
+                      AND kyc.IsActive = 1
+                      AND kyc.IsProcessed = -1
+                      AND kyc.Verified_Date BETWEEN %s AND %s
+                    GROUP BY 
+                        z.Zone, d.Divisionname, r.regionname, u.unitname,
+                        a.employee_id, kyc.EmpID, kyc.DOB, kyc.MobileNo, 
+                        kyc.AdhaarNo, kyc.PAN_Number, a.first_name, a.surname,
+                        kyc.FinalVerified_by, verifier.first_name, verifier.surname, kyc.Verified_Date,
+                        trn.Remark;
+                """
+                params = unit_ids + [start_date, end_date]
 
-                cursor.execute(query, params)  # Execute query with parameters
-                queryset = cursor.fetchall()  # Fetch results
-
-                # Now process the query result
-                columns = [col[0] for col in cursor.description]  # Get column names
-                df = pd.DataFrame(queryset, columns=columns)  # Convert results to DataFrame
-        else:
-            with connections['default'].cursor() as cursor:
+            else:
                 query = f"""
                     SELECT z.Zone, d.Divisionname, r.regionname, u.unitname, kyc.EmpID, 
                            a.first_name, a.surname, FORMAT(kyc.DOB, 'yyyy-MM-dd') AS DOB, 
@@ -716,29 +720,39 @@ def download_excel_reports(request):
                     LEFT JOIN Zone z ON z.id = d.zoneID
                     WHERE a.UnitID IN ({unit_ids_str}) AND kyc.IsActive = 1 AND kyc.IsProcessed = 0;
                 """
-                params = unit_ids  # Combine unit_ids with the other parameters
+                params = unit_ids
 
-                cursor.execute(query, params)  # Execute query with parameters
-                queryset = cursor.fetchall()
-                columns = [col[0] for col in cursor.description]
-                df = pd.DataFrame(queryset, columns=columns)
-        
-        # ✅ Check if Data is Available
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+            columns = [col[0] for col in cursor.description]
+            df = pd.DataFrame(rows, columns=columns)
+
         if df.empty:
             return JsonResponse({'success': False, 'message': 'No data available for export.'})
 
-        # ✅ Convert datetime columns safely
+        # Clean "remark" column if exists
+        if 'remark' in df.columns:
+            df['remark'] = df['remark'].astype(str)
+            df['remark'] = df['remark'].str.replace(r'[\r\n\t]', ' ', regex=True)
+            df['remark'] = df['remark'].str.strip()
+
         for col in ['RecievedDate', 'Verified_Date']:
             if col in df.columns:
                 df[col] = pd.to_datetime(df[col], errors='coerce')
                 df[col] = df[col].dt.date
 
-        # ✅ Response as Excel File
-        response = HttpResponse(content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+        # Prepare Excel in memory
+        output = io.BytesIO()
+        with pd.ExcelWriter(output, engine='openpyxl') as writer:
+            df.to_excel(writer, index=False)
+            
+        output.seek(0)  # ✅ Important to move to the start of buffer
+
+        response = HttpResponse(
+            output.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
         response["Content-Disposition"] = f'attachment; filename="{report_type}_KYC_Report.xlsx"'
-
-        df.to_excel(response, index=False, engine="openpyxl")
-
         return response
 
     except Exception as e:
