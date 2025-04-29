@@ -1820,3 +1820,151 @@ Traceback (most recent call last):
     raise ValueError(err) from err
 ValueError: 9 columns passed, passed data had 8 columns
 "GET /HR_dashboard/ HTTP/1.1" 500 180637
+Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 289, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 368, in get_new_connection
+    conn = Database.connect(connstr, **args)
+pyodbc.InterfaceError: ('28000', '[28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456) (SQLDriverConnect); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\Dev_Cyber_Quiz\Cyber-Security-Awareness-Quiz\Quiz\views.py", line 41, in home
+    with connections['second_db'].cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 330, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 261, in _cursor
+    conn = super()._cursor()
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 306, in _cursor
+    self.ensure_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 288, in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 289, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 368, in get_new_connection
+    conn = Database.connect(connstr, **args)
+django.db.utils.InterfaceError: ('28000', '[28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456) (SQLDriverConnect); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0)')
+"POST / HTTP/1.1" 500 149972
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=completed&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 53
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-24 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 421
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 59
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 517
+Internal Server Error: /download-excel-reports/
+"GET /download-excel-reports/?type=reject&start=2025-04-10&end=2025-04-25 HTTP/1.1" 500 59
+Internal Server Error: /
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 289, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 368, in get_new_connection
+    conn = Database.connect(connstr, **args)
+pyodbc.InterfaceError: ('28000', '[28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456) (SQLDriverConnect); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0)')
+
+The above exception was the direct cause of the following exception:
+
+Traceback (most recent call last):
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\exception.py", line 55, in inner
+    response = get_response(request)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\core\handlers\base.py", line 197, in _get_response
+    response = wrapped_callback(request, *callback_args, **callback_kwargs)
+  File "C:\Users\User\Desktop\Dev_Cyber_Quiz\Cyber-Security-Awareness-Quiz\Quiz\views.py", line 41, in home
+    with connections['second_db'].cursor() as cursor:
+         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 330, in cursor
+    return self._cursor()
+           ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 261, in _cursor
+    conn = super()._cursor()
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 306, in _cursor
+    self.ensure_connection()
+    ~~~~~~~~~~~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 288, in ensure_connection
+    with self.wrap_database_errors:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\utils.py", line 91, in __exit__
+    raise dj_exc_value.with_traceback(traceback) from exc_value
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 289, in ensure_connection
+    self.connect()
+    ~~~~~~~~~~~~^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\utils\asyncio.py", line 26, in inner
+    return func(*args, **kwargs)
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\django\db\backends\base\base.py", line 270, in connect
+    self.connection = self.get_new_connection(conn_params)
+                      ~~~~~~~~~~~~~~~~~~~~~~~^^^^^^^^^^^^^
+  File "C:\Users\User\AppData\Roaming\Python\Python313\site-packages\mssql\base.py", line 368, in get_new_connection
+    conn = Database.connect(connstr, **args)
+django.db.utils.InterfaceError: ('28000', '[28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456) (SQLDriverConnect); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Login failed for user \'SFPL_Connect\'. (18456); [28000] [Microsoft][ODBC Driver 17 for SQL Server][SQL Server]Cannot open database "HR" requested by the login. The login failed. (4060); [28000] [Microsoft][ODBC Driver 17 for SQL Server]Invalid connection string attribute (0)')
+"POST / HTTP/1.1" 500 150245
