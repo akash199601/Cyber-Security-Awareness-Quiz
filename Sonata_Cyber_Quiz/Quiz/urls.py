@@ -7,16 +7,16 @@ handler500 = 'Quiz.views.custom_500'
 
 urlpatterns = [
     path('', views.home, name='home'),
-    path('HR_dashboard/', views.HR_dashboard, name='HR_dashboard'),
-    path("reports/", views.reports_view, name="reports"),
-    path("download-reports/", views.download_reports, name="download_reports"),
-    path("download-excel-reports/", views.download_excel_reports, name="download_excel_reports"),
+    # path('HR_dashboard/', views.HR_dashboard, name='HR_dashboard'),
+    # path("reports/", views.reports_view, name="reports"),
+    # path("download-reports/", views.download_reports, name="download_reports"),
+    # path("download-excel-reports/", views.download_excel_reports, name="download_excel_reports"),
     path('get-emp-images/', views.get_emp_images, name='get_emp_images'),
     path('run-sp/', views.run_stored_procedure, name='run_stored_procedure'),
-    path("verify-document/", views.verify_document, name="verify_document"),
+    # path("verify-document/", views.verify_document, name="verify_document"),
     path('logout/', views.user_logout, name='logout'),
     path('final-submission/', views.final_submission, name='final_submission'),
-    path('get_verification_status/', views.get_verification_status, name='get_verification_status'),
+    # path('get_verification_status/', views.get_verification_status, name='get_verification_status'),
     path('helpdesk/', views.helpdesk, name='helpdesk'),
     
     

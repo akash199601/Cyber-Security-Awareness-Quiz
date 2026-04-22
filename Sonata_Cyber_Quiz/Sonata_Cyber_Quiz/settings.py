@@ -133,8 +133,8 @@ DATABASES = {
     "second_db": {
         "ENGINE": "mssql",
         "NAME": "HR",
-        "USER": "SFPL_Connect",
-        "PASSWORD": "$%n5bF33%X",
+        "USER": "HRMS_Reporting",
+        "PASSWORD": "$R3p0rt%453#",
         "HOST": "172.17.130.203",
         "PORT": "1433",
         "OPTIONS": {

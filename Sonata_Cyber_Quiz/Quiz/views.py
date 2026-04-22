@@ -31,6 +31,9 @@ def custom_500(request):
 
 
 def home(request):
+    if request.session.get('candidate_id'):
+        return redirect('quiz_section')
+        
     if request.method == 'POST':
         form = CandidateForm(request.POST)
         if form.is_valid():
@@ -38,35 +41,43 @@ def home(request):
             password = form.cleaned_data['password']
             
             # Query to match employee_id and password
-            with connections['second_db'].cursor() as cursor:
-                cursor.execute("""
-                    SELECT SI.empId, SI.password, EM.first_name, EM.surname
-                    FROM signUp AS SI
-                    LEFT JOIN EmployeeMaster AS EM ON SI.empId = EM.employee_id
-                    LEFT JOIN [HR].[dbo].[department] AS DP ON EM.DeptID = DP.department_id
-                    WHERE SI.empId = %s AND SI.password = %s AND DP.department_id = 29;
-                """, [employee_id, password])
+            try:
+                with connections['second_db'].cursor() as cursor:
+                    cursor.execute("""
+                        SELECT SI.empId, SI.password, EM.first_name, EM.surname
+                        FROM signUp AS SI
+                        LEFT JOIN EmployeeMaster AS EM ON SI.empId = EM.employee_id
+                        LEFT JOIN [HR].[dbo].[department] AS DP ON EM.DeptID = DP.department_id
+                        WHERE SI.empId = %s AND SI.password = %s;
+                    """, [employee_id, password])
 
-                result = cursor.fetchone()
-                
-                # If result is found
-                if result:
-                    empId = result[0]
-                    first_name = result[2]
-                    surname = result[3]
-                    full_name = first_name +''+ surname
-                    print("fullname", full_name)
-                    candidate, created = Candidate.objects.get_or_create(
-                        name=full_name,
-                        employee_id=empId
-                    )
-                    request.session['candidate_id'] = candidate.id
-                    request.session['employee_id'] = empId  # Store employee_id in session
-                    request.session['name'] = full_name
+                    result = cursor.fetchone()
+                    print(f"Login Attempt: {employee_id}, Result: {result}")
                     
-                    return redirect('HR_dashboard')                    
-            # Render home with error message
-            return render(request, 'home.html', {'form': form})
+                    # If result is found
+                    if result:
+                        empId = result[0]
+                        first_name = result[2] or ""
+                        surname = result[3] or ""
+                        full_name = f"{first_name} {surname}".strip()
+                        print("fullname", full_name)
+                        
+                        candidate = Candidate.objects.filter(employee_id=empId).first()
+                        if not candidate:
+                            candidate = Candidate.objects.create(
+                                employee_id=empId,
+                                name=full_name
+                            )
+                        request.session['candidate_id'] = candidate.id
+                        request.session['employee_id'] = empId  # Store employee_id in session
+                        request.session['name'] = full_name
+                        
+                        return redirect('quiz_section')
+                    else:
+                        return render(request, 'home.html', {'form': form, 'error': 'Invalid Employee ID or Password.'})
+            except Exception as e:
+                print(f"Login Database Error: {e}")
+                return render(request, 'home.html', {'form': form, 'error': f'Database Error: {e}'})
 
     else:
         form = CandidateForm()
@@ -846,7 +857,8 @@ def quiz_section(request):
     not_completed_sections = []
 
     for section, details in sections.items():
-        result = QuizResult.objects.filter(candidate_id=candidate_id, section=section).order_by('-id').first()
+        employee_id = str(request.session.get('employee_id')).strip()
+        result = QuizResult.objects.filter(employee_id__icontains=employee_id, section__icontains=section.strip(), section_complete=1).order_by('-id').first()
         section_data = {
             'name': section,
             'description': details['description'],
@@ -864,7 +876,8 @@ def quiz_section(request):
     return render(request, 'quiz_sections.html', {
         'completed_sections': completed_sections,
         'not_completed_sections': not_completed_sections,
-        
+        'employee_name': request.session.get('name'),
+        'employee_id': request.session.get('employee_id'),
     })
 
 def start_quiz(request, section=None):

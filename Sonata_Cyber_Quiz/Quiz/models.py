@@ -37,7 +37,9 @@ class QuizResult(models.Model):
     def __str__(self):
         return '__all__'
     class Meta:
-        unique_together = ('candidate_id', 'section') 
+        unique_together = ('employee_id', 'section') 
+        db_table = 'candidate_assessments_result'  # This should match the actual table name in the master database
+
 
 class EmployeeMaster(models.Model):
     UnitID = models.IntegerField(null=True, blank=True)
