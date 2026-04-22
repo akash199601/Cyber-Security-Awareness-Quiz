@@ -6,6 +6,9 @@ class Candidate(models.Model):
     name = models.CharField(max_length=20)
     employee_id = models.IntegerField()
 
+    class Meta:
+        db_table = 'Quiz_Employee'  # This should match the actual table name in the master database
+
     def __str__(self):
         return '__all__'
 
