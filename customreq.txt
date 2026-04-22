@@ -1,0 +1,5 @@
+django
+mssql-django
+pandas
+reportlab
+wfastcgi

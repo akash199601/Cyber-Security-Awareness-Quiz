@@ -1,0 +1,135 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta1/dist/css/bootstrap.min.css"/>
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        p {
+            margin: 0;
+            color: #c52167;
+        }
+        body {
+            height: auto;
+            width: 100%;
+            padding: 10px;
+            background-image: url("{% static 'image1.png' %}");
+            background-repeat: no-repeat;
+            background-attachment: fixed;
+            background-size: cover;
+        }
+        .container {
+            margin-left: 15%;
+            margin-right: 15%;
+            margin-top: 10%;
+            padding: 20px 15px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            height: 850px;
+        }
+        @media(max-width: 460px) {
+            .container {
+                margin: 100px auto;
+            }
+        }
+        label.box {
+            display: flex;
+            margin-top: 10px;
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+            border: 1px solid black;
+            background-color: white;
+        }
+        input[type="radio"] {
+            display: none;
+        }
+        input[type="radio"]:checked + label {
+            border-color: #8e498e;
+        }
+        input[type="radio"]:checked + label .circle {
+            border: 6px solid #8e498e;
+            background-color: #fff;
+        }
+        label.box:hover {
+            background: #d5bbf7;
+        }
+        label.box .course {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        label.box .circle {
+            height: 22px;
+            width: 22px;
+            border-radius: 50%;
+            margin-right: 15px;
+            border: 2px solid #ddd;
+            display: inline-block;
+        }
+        label.box .subject {
+            color: black;
+            font-size: 16px;
+        }
+        .btn.btn-primary {
+            border-radius: 25px;
+            margin-top: 20px;
+        }
+        @media(max-width: 450px) {
+            .subject {
+                font-size: 12px;
+            }
+        }
+        form{
+            height: 85%;
+            overflow-x: hidden;
+        }
+    </style>
+    <script language='javascript' type='text/javascript'>
+        function DisableBackButton(){
+            window.history.forward()
+        }
+        DisableBackButton();
+        window.onload = DisableBackButton;
+        window.onpageshow = function(evt){
+            if (evt.persisted) DisableBackButton()
+        }
+        window.onunload = function(){ void (0) }
+
+    </script>
+    <script type="text/javascript">
+        function googleTranslateElementInit() {
+            new google.translate.TranslateElement({
+                pageLanguage: 'en',  // Default language of your page
+                includedLanguages: 'en,hi',  // Languages you want to include, add more if needed
+                layout: google.translate.TranslateElement.InlineLayout.SIMPLE
+            }, 'google_translate_element');
+        }
+    </script>
+    <script type="text/javascript" src="https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
+
+</head>
+<body>
+    <div id="google_translate_element"></div>
+    <header>
+        <div class="logo">
+            <img src="{% static 'logo.png' %}" alt="Company Logo" width="200" height="auto">
+        </div>
+        <!-- Other header content -->
+    </header>
+    
+    {% block main_content %}
+        
+    {% endblock main_content%}
+</body>
+</html>

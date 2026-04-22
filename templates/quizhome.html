@@ -1,0 +1,189 @@
+{% extends 'base.html' %}
+{% block main_content %}
+
+<style>
+.hero-section{
+    height: 150px;
+    text-align: center;
+    margin-top: 200px;
+    margin-bottom: 100px;
+}
+.btn-start{
+    color: white;
+}
+a:hover {color: white;}
+a { color: black; text-decoration: none;}
+
+.col-md-6{
+    padding:20px;
+}
+
+li{
+    color: #c52167;
+}
+
+/* The Modal (background) */
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1; 
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow: auto; 
+    background-color: rgb(0,0,0); 
+    background-color: rgba(0,0,0,0.4); 
+    padding-top: 60px;
+}
+
+/* Modal Content */
+.modal-content {
+    background-color: #fefefe;
+    margin: 5% auto; 
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%; 
+}
+
+@media(max-width: 450px){
+    .modal-content {
+        width: 80%;
+    }
+}
+
+.modal-content h2{
+    text-align: center;
+}
+
+/* The Close Button */
+.close {
+    color: #aaa;
+    float: right;
+    font-size: 28px;
+    font-weight: bold;
+    text-align: right;
+}
+
+.close:hover,
+.close:focus {
+    color: black;
+    text-decoration: none;
+    cursor: pointer;
+}
+</style>
+    <div class="hero-section">
+        <h1>Sonata Finance Private Limited</h1>
+        <h1>Welcome to Cyber Security Awareness Quiz</h1>
+        <p>Test your knowledge and improve your cyber security skills with our comprehensive quiz.</p>
+        <button type="button" class="btn btn-primary px-4 py-2 fw-bold" id="openModalBtn">Start Quiz</button>
+    </div>
+    <div class="container mt-5">
+        <div class="row">
+            <div class="col-md-6">
+                <h2>About the Quiz</h2>
+                <p>
+                    Welcome to the <strong>Cyber Security Awareness Quiz</strong>! This quiz has been designed to increase your knowledge 
+                    and awareness of critical cyber security practices that are essential for safeguarding our organization and personal data 
+                    in the digital age.
+                </p>
+                <p>
+                    With the rise in cyber threats, it's important that every employee understands how to protect sensitive information, 
+                    recognize common security risks, and respond effectively in case of a breach. This quiz will cover various topics including:
+                </p>
+                <ul>
+                    <li>Recognizing phishing attacks</li>
+                    <li>Best practices for password security</li>
+                    <li>Identifying malware and viruses</li>
+                    <li>Secure handling of sensitive information</li>
+                    <li>Social engineering risks</li>
+                    <li>Safeguarding company assets online</li>
+                </ul>            
+            </div>
+            <div class="col-md-6">
+                <h2>How It Works</h2>
+                <ul>
+                    <li>Start the quiz by filling out your details.</li>
+                    <li>Answer all questions within the given time.</li>
+                    <li>Submit your answers to see your results.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- The Modal -->
+    <div id="myModal" class="modal" style="display: {{ error|default:'none' }};">
+        <!-- Modal content -->
+        <div class="modal-content">
+            <span class="close">&times;</span>
+            <h2>Enter Details</h2>
+            <form method="POST" action="" id="userForm">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn btn-primary">Submit</button>
+                <!-- Display the error message if user not found -->
+                {% if error %}
+                <p style="color: red;">{{ error }}</p>
+                {% endif %}
+              
+            </form>
+        </div>
+    </div>
+
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            document.getElementById("userForm").addEventListener("submit", function(event) {
+                event.preventDefault();
+                console.log("Form submission initiated.");
+    
+                const emp_id = document.getElementById("emp_id").value.trim();
+                const Pattern = /^[0-9]+$/;
+    
+                if (!Pattern.test(emp_id)) {
+                    alert("Employee ID should only contain positive numbers.");
+                    return;
+                }
+                event.target.submit();
+            });
+        });
+    </script>
+<script>
+// Get the modal
+var modal = document.getElementById("myModal");
+// Get the button that opens the modal
+var btn = document.getElementById("openModalBtn");
+
+// Get the <span> element that closes the modal
+var span = document.getElementsByClassName("close")[0];
+
+// When the user clicks the button, open the modal
+btn.onclick = function() {
+    modal.style.display = "block";
+}
+
+
+
+// When the user clicks on <span> (x), close the modal
+span.onclick = function() {
+    modal.style.display = "none";
+}
+
+
+
+// When the user clicks anywhere outside of the modal, close it
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+
+}
+
+// Keep the modal open if there's an error
+if ("{{ error }}") {
+    modal.style.display = "block";
+}
+
+</script>    
+{% endblock main_content%}
