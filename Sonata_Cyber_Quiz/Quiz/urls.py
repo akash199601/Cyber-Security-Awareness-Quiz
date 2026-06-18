@@ -7,6 +7,8 @@ handler500 = 'Quiz.views.custom_500'
 
 urlpatterns = [
     path('', views.home, name='home'),
+    path('quiz-admin/', views.quiz_admin_dashboard, name='quiz_admin_dashboard'),
+    path('quiz-admin/attempts/', views.quiz_admin_attempts_log, name='quiz_admin_attempts_log'),
     # path('HR_dashboard/', views.HR_dashboard, name='HR_dashboard'),
     # path("reports/", views.reports_view, name="reports"),
     # path("download-reports/", views.download_reports, name="download_reports"),

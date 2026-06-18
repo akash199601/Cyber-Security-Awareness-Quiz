@@ -1,0 +1,293 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz Admin Dashboard</title>
+    <!-- Outfit Google Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;950&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            primary: '#ef4444',
+                            secondary: '#dc2626',
+                            bg: '#f8fafc',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Outfit', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        /* Modern Glassmorphism Styling */
+        .glass {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 10px 30px 0 rgba(31, 38, 135, 0.02);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px 0 rgba(239, 68, 68, 0.05);
+            border-color: rgba(239, 68, 68, 0.12);
+        }
+
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 font-sans antialiased min-h-screen flex">
+
+    <!-- LEFT SIDEBAR NAVIGATION (Narrow Width w-56, Always Open) -->
+    <aside id="sidebar" class="w-56 bg-white border-r border-slate-100 flex flex-col shrink-0 min-h-screen p-4 relative z-20">
+        <!-- Brand Header -->
+        <div class="brand-header flex items-center gap-2 mb-6 px-1">
+            <div class="w-7 h-7 bg-[#ef4444] rounded-lg flex items-center justify-center text-white text-sm font-black shadow-md shadow-red-500/10 shrink-0">
+                S
+            </div>
+            <div class="brand-text flex flex-col">
+                <span class="font-bold text-[11px] tracking-tight text-slate-900 leading-none">BSS Sonata</span>
+                <span class="text-[7.5px] font-black text-slate-650 uppercase tracking-widest mt-0.5">QUIZ PORTAL</span>
+            </div>
+            <!-- Pin Button (Static cosmetic detail, does not collapse) -->
+            <button class="pin-btn w-6 h-6 rounded-md bg-rose-50 text-rose-500 flex items-center justify-center shrink-0 ml-auto cursor-default">
+                <i class="fa-solid fa-thumbtack text-[9px]"></i>
+            </button>
+        </div>
+
+        <!-- Menu Navigation list -->
+        <div class="flex-grow space-y-4">
+            <div class="space-y-1">
+                <label class="menu-label text-[8.5px] font-black text-slate-600 uppercase tracking-[0.2em] pl-1">Quiz Navigation</label>
+                <nav class="space-y-1 flex flex-col items-stretch">
+                    <a href="{% url 'quiz_admin_dashboard' %}" class="flex items-center gap-2 px-3 py-2 bg-red-50/50 hover:bg-red-50 text-red-650 rounded-xl border-l-4 border-brand-primary font-bold text-[11px] transition-all">
+                        <i class="fa-solid fa-chart-pie text-xs shrink-0"></i> <span class="sidebar-text font-black">Dashboard</span>
+                    </a>
+                    <a href="{% url 'quiz_admin_attempts_log' %}" class="flex items-center gap-2 px-3 py-2 text-slate-600 hover:text-slate-900 hover:bg-slate-50/80 rounded-xl font-bold text-[11px] transition-all">
+                        <i class="fa-solid fa-list-check text-xs shrink-0"></i> <span class="sidebar-text">Attempts Log</span>
+                    </a>
+                </nav>
+            </div>
+        </div>
+
+        <!-- Logout Sidebar link -->
+        <div class="pt-4 border-t border-slate-100 mt-auto shrink-0">
+            <a href="{% url 'logout' %}" class="flex items-center gap-2 px-3 py-2 text-rose-650 hover:text-rose-800 hover:bg-rose-50/50 rounded-xl font-black text-[11px] transition-all">
+                <i class="fa-solid fa-arrow-right-from-bracket text-xs shrink-0"></i> <span class="sidebar-text">Logout</span>
+            </a>
+        </div>
+    </aside>
+
+    <!-- MAIN DASHBOARD CONTENT AREA -->
+    <div class="flex-grow flex flex-col min-h-screen overflow-x-hidden">
+        
+        <!-- SLEEK RED HEADER BAR (Reduced Height h-10) -->
+        <header class="w-full bg-[#ef4444] h-10 flex items-center justify-between px-6 text-white relative shadow-sm z-10">
+            <div class="flex items-center gap-2">
+                <span class="text-[10px] font-black tracking-widest uppercase">Quiz Admin Panel</span>
+            </div>
+            
+            <div class="flex items-center gap-4">
+                <!-- Notification bell -->
+                <div class="relative hover:scale-105 transition-transform cursor-pointer">
+                    <i class="fa-regular fa-bell text-sm"></i>
+                    <span class="absolute top-0 right-0 w-1.5 h-1.5 bg-white rounded-full ring-2 ring-red-500"></span>
+                </div>
+                
+                <!-- Admin Profile Info -->
+                <div class="flex items-center gap-2 bg-red-600/30 px-2.5 py-1 rounded-lg border border-white/10">
+                    <div class="w-5 h-5 rounded-full bg-white text-[#ef4444] flex items-center justify-center font-bold text-[9px] shadow-sm">
+                        {% if request.user.username %}{{ request.user.username|slice:":2"|upper }}{% else %}AD{% endif %}
+                    </div>
+                    <div class="flex flex-col text-left leading-none">
+                        <span class="text-[9px] font-black uppercase tracking-wider text-white">
+                            {% if request.user.username %}{{ request.user.username }}{% else %}Administrator{% endif %}
+                        </span>
+                        <span class="text-[7.5px] text-white font-extrabold uppercase tracking-widest mt-0.5">Admin</span>
+                    </div>
+                </div>
+
+                <!-- Logout -->
+                <a href="{% url 'logout' %}" class="text-white hover:text-red-200 transition-colors hover:scale-110 active:scale-95">
+                    <i class="fa-solid fa-arrow-right-from-bracket text-sm"></i>
+                </a>
+            </div>
+        </header>
+
+        <!-- DASHBOARD CONTAINER -->
+        <main class="flex-grow p-6 space-y-6 max-w-[1400px] w-full mx-auto animate-in fade-in duration-500">
+            
+            <!-- 1. PAGE HEADER / WELCOME HERO BANNER -->
+            <section class="space-y-4">
+                <div class="flex flex-col md:flex-row md:items-center justify-between gap-6 glass p-5 rounded-xl relative overflow-hidden group border border-slate-200/50 shadow-sm">
+                    <!-- Ambient Glow -->
+                    <div class="absolute top-0 right-0 w-64 h-64 bg-red-500/5 rounded-full blur-[60px] -mr-32 -mt-32 transition-colors group-hover:bg-red-500/10"></div>
+                    
+                    <div class="relative z-10 flex-grow">
+                        <div class="flex items-center gap-3">
+                            <div class="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 border border-red-500/20 shadow-inner">
+                                <i class="fa-solid fa-shield-halved text-base"></i>
+                            </div>
+                            <div>
+                                <h1 class="text-xl font-black text-slate-900 tracking-tight">Quiz Administration Summary</h1>
+                                <p class="text-slate-755 text-[8.5px] font-black uppercase tracking-widest flex items-center gap-1.5 mt-0.5">
+                                    <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                                    Real-time candidate results and performance tracking
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 2. ANALYTICS CARD GRID -->
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Card 1: Total Candidates -->
+                <div class="glass-card p-4 rounded-xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-500 border border-blue-500/20 flex items-center justify-center">
+                            <i class="fa-solid fa-users text-sm"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-bold text-slate-650 uppercase tracking-widest block leading-none">Registered Candidates</span>
+                        <h3 class="text-xl font-black text-slate-900 mt-1">{{ total_candidates }}</h3>
+                        <p class="text-[8px] text-blue-700 font-bold uppercase tracking-wide mt-1.5 flex items-center gap-1">
+                            <span class="w-1 h-1 rounded-full bg-blue-500"></span> Total Profiles
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 2: Total Attempts -->
+                <div class="glass-card p-4 rounded-xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-500 border border-purple-500/20 flex items-center justify-center">
+                            <i class="fa-solid fa-file-circle-check text-sm"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-bold text-slate-655 uppercase tracking-widest block leading-none">Total Quiz Attempts</span>
+                        <h3 class="text-xl font-black text-slate-900 mt-1">{{ total_attempts }}</h3>
+                        <p class="text-[8px] text-purple-700 font-bold uppercase tracking-wide mt-1.5 flex items-center gap-1">
+                            <span class="w-1 h-1 rounded-full bg-purple-500"></span> Completed Sections
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 3: Average Score -->
+                <div class="glass-card p-4 rounded-xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-500 border border-amber-500/20 flex items-center justify-center">
+                            <i class="fa-solid fa-gauge text-sm"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-bold text-slate-650 uppercase tracking-widest block leading-none">Average Score</span>
+                        <h3 class="text-xl font-black text-slate-900 mt-1">{{ avg_score|floatformat:1 }}%</h3>
+                        <p class="text-[8px] text-amber-700 font-bold uppercase tracking-wide mt-1.5 flex items-center gap-1">
+                            <span class="w-1 h-1 rounded-full bg-amber-500"></span> Accuracy Rate
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Card 4: Pass Rate -->
+                <div class="glass-card p-4 rounded-xl relative overflow-hidden flex flex-col justify-between min-h-[110px]">
+                    <div class="flex items-center justify-between mb-1">
+                        <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 flex items-center justify-center">
+                            <i class="fa-solid fa-circle-check text-sm"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <span class="text-[8px] font-bold text-slate-655 uppercase tracking-widest block leading-none">Overall Pass Rate</span>
+                        <h3 class="text-xl font-black text-slate-900 mt-1">{{ pass_rate|floatformat:1 }}%</h3>
+                        <p class="text-[8px] text-emerald-700 font-bold uppercase tracking-wide mt-1.5 flex items-center gap-1">
+                            <span class="w-1 h-1 rounded-full bg-emerald-500"></span> Score &gt;= 60%
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- 3. FULL WIDTH DATA WORKSPACE -->
+            <div class="space-y-6 w-full">
+                
+                <!-- Section Breakdown Summary (Full Width) -->
+                <section id="breakdowns-section" class="glass-card p-5 rounded-2xl w-full">
+                    <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+                        <div class="w-7 h-7 rounded-lg bg-red-500/10 text-red-500 flex items-center justify-center">
+                            <i class="fa-solid fa-layer-group text-[10px]"></i>
+                        </div>
+                        <div>
+                            <h3 class="text-xs font-black text-slate-900 uppercase tracking-wider">Quiz Section Breakdowns</h3>
+                            <p class="text-[8px] text-slate-600 font-black uppercase tracking-widest mt-0.5">Quiz module statistics & rates</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        {% for sec_name, sec_data in section_breakdowns.items %}
+                        <div class="p-3.5 rounded-xl bg-slate-50/50 border border-slate-100 flex flex-col justify-between">
+                            <div>
+                                <div class="flex justify-between items-start mb-1">
+                                    <span class="font-black text-[10px] uppercase tracking-wider text-slate-950">{{ sec_name }}</span>
+                                    <span class="text-[8px] font-bold text-slate-600">{{ sec_data.attempts }} attempts</span>
+                                </div>
+                                
+                                <!-- Custom Progress Bar -->
+                                <div class="w-full bg-slate-200/50 rounded-full h-1.5 overflow-hidden my-1.5 border border-slate-200/20">
+                                    <div class="h-full bg-gradient-to-r from-red-500 to-rose-600 rounded-full transition-all duration-500" style="width: {{ sec_data.completion_percentage }}%;"></div>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center text-[8px] text-slate-700 font-extrabold mt-1.5 pt-1.5 border-t border-slate-200/40">
+                                <span>Comp. Rate: {{ sec_data.completion_percentage|floatformat:1 }}%</span>
+                                <span class="text-red-650">Avg: {{ sec_data.avg_score|floatformat:1 }}%</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+        </main>
+
+        <!-- FOOTER ANNOTATION -->
+        <footer class="w-full text-center py-4 border-t border-slate-200/40 bg-white/60 text-slate-500 text-[8.5px] mt-auto font-bold">
+            <div class="max-w-[1400px] mx-auto px-6 flex justify-between items-center font-black uppercase tracking-[0.2em]">
+                <span>&copy; 2026 Sonata Finance. Quiz Administration</span>
+                <span>Sonata Design Framework &bull; V3.1.0</span>
+            </div>
+        </footer>
+    </div>
+</body>
+</html>

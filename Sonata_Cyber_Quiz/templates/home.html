@@ -139,10 +139,10 @@ li{
                 console.log("Form submission initiated.");
     
                 const emp_id = document.getElementById("emp_id").value.trim();
-                const Pattern = /^[0-9]+$/;
+                const Pattern = /^(admin|[0-9]+)$/;
     
                 if (!Pattern.test(emp_id)) {
-                    alert("Employee ID should only contain positive numbers.");
+                    alert("Employee ID should only contain positive numbers or 'admin'.");
                     return;
                 }
                 event.target.submit();
