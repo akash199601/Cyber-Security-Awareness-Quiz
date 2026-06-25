@@ -121,10 +121,10 @@ WSGI_APPLICATION = 'Sonata_Cyber_Quiz.wsgi.application'
 DATABASES = {
     "default": {
         "ENGINE": "mssql",
-        "NAME": "Sonata_Cyber_Quiz",
+        "NAME": "Sonata_Cyber_Quiz_New",
         "USER": "SFPL_Connect",
         "PASSWORD": "$%n5bF33%X",
-        "HOST": "172.17.130.216",
+        "HOST": "172.17.130.232",
         "PORT": "1433",
         "OPTIONS": {
             "driver": "ODBC Driver 17 for SQL Server",
